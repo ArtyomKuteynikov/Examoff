@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="card">
+    <h3>Успех!</h3>
+    <div style="margin: 40px 0;">
+        <p>Поздравляем, оплата прошла успешно!</p>
+        <p>Теперь вы снова можете пользоваться сервисом! На вашем балансе <b>{{ user.customer.tokens }}</b>
+            {% if user.customer.subscription %}
+            Подписка действует до {{ user.customer.subscription }}!
+            {% endif %}
+        </p>
+    </div>
+    <a href="/" class="btn btn-big">Кабинет</a>
+</div>
+
+{% endblock %}

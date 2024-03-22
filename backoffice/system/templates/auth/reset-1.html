@@ -1,0 +1,23 @@
+{% extends "auth.html" %}
+
+{% block content %}
+
+<form method="post" action="{% url 'request-reset-password' %}">
+    <h3>Введите ваш email</h3>
+    {% if success %}
+        <div class="alert alert-primary alert-dismissible fade show" role="alert">
+            Письмо успешно отправлено!
+        </div>
+    {% elif mistake %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            Такого аккаунта не существует!
+        </div>
+    {% endif %}
+    <div style="margin: 40px 0;">
+        {% csrf_token %}
+        {{ form.as_p }}
+    </div>
+    <button type="submit" class="btn btn-info is-fullwidth">Отправить</button>
+    <p>Есть аккаунт? <a href="/login">Войти</a></p>
+</form>
+{% endblock %}

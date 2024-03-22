@@ -1,0 +1,15 @@
+{% extends "auth.html" %}
+
+{% block content %}
+
+<form method="post" action="{% url 'login' %}">
+    <h3>Войти в аккаунт</h3>
+    <div style="margin: 40px 0;">
+        {% csrf_token %}
+        {{ form.as_p }}
+    </div>
+    <button type="submit" class="btn btn-info is-fullwidth">Войти</button>
+    <p>Еще нет аккаунта? <a href="/signup">Зарегистрироваться</a></p>
+    <a href="/request">Забыли пароль?</a>
+</form>
+{% endblock %}

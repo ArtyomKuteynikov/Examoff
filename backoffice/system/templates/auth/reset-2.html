@@ -1,0 +1,13 @@
+{% extends "auth.html" %}
+
+{% block content %}
+
+<form method="post" action="{% url 'reset-password' token=token %}">
+    <h3>Задайте пароль для своего аккаунта</h3>
+    <div style="margin: 0 20px;">
+        {% csrf_token %}
+    </div>
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-info is-fullwidth">Войти</button>
+</form>
+{% endblock %}

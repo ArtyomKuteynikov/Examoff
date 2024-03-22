@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ЮКасса</title>
+</head>
+<body>
+{% load custom_tags %}
+<h1>Оплата</h1>
+<p>{% price price %} ₽</p>
+<a href="/paid/{{ transaction_id }}">Оплатить</a>
+</body>
+</html>

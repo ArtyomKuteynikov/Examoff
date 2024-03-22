@@ -1,0 +1,18 @@
+{% extends "auth.html" %}
+
+{% block content %}
+
+{% if invite_code %}
+<form method="post" action="{% url 'signup' invite_code=invite_code %}">
+{% else %}
+<form method="post" action="{% url 'signup' invite_code=invite_code %}">
+{% endif %}
+    <h3>Регистриция</h3>
+    <div style="margin: 40px 0;">
+        {% csrf_token %}
+        {{ form.as_p }}
+    </div>
+    <button type="submit" class="btn btn-info is-fullwidth">Зарегистрироваться</button>
+    <p>Есть аккаунт? <a href="/login">Войти</a></p>
+</form>
+{% endblock %}

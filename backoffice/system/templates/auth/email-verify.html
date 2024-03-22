@@ -1,0 +1,13 @@
+{% extends "auth.html" %}
+
+{% block content %}
+
+<form method="post" action="{% url 'set-password' token=token %}">
+    <h3>Задайте пароль для своего аккаунта</h3>
+    <div style="margin: 40px 0;">
+        {% csrf_token %}
+        {{ form.as_p }}
+    </div>
+    <button type="submit" class="btn btn-info is-fullwidth">Войти</button>
+</form>
+{% endblock %}

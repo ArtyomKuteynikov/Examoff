@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div style="display: flex;margin: 0 0 10px 0;">
+    <div class="rounded-circle" style="margin: 0 10px 0 0;min-width: 40px;height: 40px;background-color: #F8F9FB">
+        <i class="ci-star" style="margin: 10px;color: #DAE0E6;"></i>
+    </div>
+    <h3 style="margin: auto 0;">
+        Ваша подписка
+    </h3>
+</div>
+
+
+<div class="card">
+    <div class="row">
+        <div class="col-md-6">
+            {% if user.customer.subscription %}
+            <h5>
+                Подписка активна
+            </h5>
+            <p>Активна до: {{ user.customer.subscription }}</p>
+            {% else %}
+            <h5>
+                У вас нет активной подписки
+            </h5>
+            {% endif %}
+            <p>
+                Осталось токенов: {{ user.customer.tokens }}
+                <button style="padding: 0;height: 20px;width: 20px;" class="btn btn-info rounded-circle" onclick="openAddModal()">
+                    <p style="margin: auto;color:#fff !important;">+</p>
+                </button>
+            </p>
+        </div>
+        <div class="col-md-6">
+            {% if not user.customer.subscription %}
+            <button class="btn btn-big" onclick="openSubscribeModal()">
+                Оформить подписку
+            </button>
+            {% else %}
+            <button class="btn btn-big" onclick="openSubscribeModal()">
+                Продлить подписку
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div style="display: flex;margin: 0 0 10px 0;">
+    <div class="rounded-circle" style="margin: 0 10px 0 0;min-width: 40px;height: 40px;background-color: #F8F9FB">
+        <i class="ci-star" style="margin: 10px;color: #DAE0E6;"></i>
+    </div>
+    <h3 style="margin: auto 0;">
+        Реферальная система
+    </h3>
+</div>
+
+<div class="card">
+    <div class="row">
+        <div class="col-md-6">
+            <h5>
+                Пригласите друзей и получите до <b>{{ invitation_tokens }}</b> токенов
+            </h5>
+            <p>
+                Осталось приглашений: {{ user.customer.referrings }}
+            </p>
+        </div>
+        <div class="col-md-6">
+            <button class="btn btn-big" onclick="openReferralModal()">
+                Пригласить друзей
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="referral" tabindex="-1" role="dialog"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Реферальная система</h3>
+                <button type="button" class="close" onclick="closeReferralModal()">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <h6>Скопируйте ссылку для приглашения друзей. Пригласите друзей и получите до <b>{{ invitation_tokens }}</b> токенов</h6>
+                <code>
+                    {{ user.customer.referral_link}}
+                </code>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    function openReferralModal() {
+        $('#referral').modal('show');;
+    }
+
+    function closeReferralModal() {
+        $('#referral').modal('hide');;
+    }
+</script>
+
+{% endblock %}

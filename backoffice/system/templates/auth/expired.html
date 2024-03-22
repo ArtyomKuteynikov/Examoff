@@ -1,0 +1,9 @@
+{% extends "auth.html" %}
+
+{% block content %}
+
+<form method="post" action="{% url 'set-password' token=token %}">
+    <br><br><br>
+    <div class="errorlist">Срок действия ссылки истек</div>
+</form>
+{% endblock %}
