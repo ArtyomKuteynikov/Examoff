@@ -20,11 +20,15 @@ def divide(a, b):
 
 @register.simple_tag
 def price(a):
+    if not a:
+        return ''
     return "{:.2f}".format(float(a))
 
 
 @register.simple_tag
 def price_js(a):
+    if not a:
+        return ''
     return "{:.8f}".format(float(a))
 
 
