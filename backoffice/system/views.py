@@ -225,7 +225,7 @@ def login_view(request):
                 form.add_error(None, "Пользователь заблокирован")
                 return render(request, 'auth/login.html', {'form': form})
             if not user.password:
-                return redirect(reverse('step3') + f'?customer={user.key}')
+                return render(request, 'auth/success.html')
             if pwd_context.verify(password, user.password):
                 login(request, Customer.objects.get(id=user.id))
                 return HttpResponseRedirect(reverse('index'))
