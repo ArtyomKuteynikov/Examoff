@@ -5,7 +5,7 @@
 {% if invite_code %}
 <form method="post" action="{% url 'signup' invite_code=invite_code %}">
 {% else %}
-<form method="post" action="{% url 'signup' invite_code=invite_code %}">
+<form method="post" action="{% url 'signup' %}">
 {% endif %}
     <h3>Регистриция</h3>
     <div style="margin: 40px 0;">
