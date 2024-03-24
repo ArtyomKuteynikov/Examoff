@@ -19,17 +19,6 @@ class ResetForm(forms.Form):
     confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Подтвердить пароль'}), label='', )
 
 
-class EditProfile(forms.ModelForm):
-    class Meta:
-        model = Customer
-        fields = ['surname', 'name', 'phone', ]
-        widgets = {
-            'surname': forms.TextInput(attrs={'placeholder': 'Фамилия', 'class': 'form-control'}),
-            'name': forms.TextInput(attrs={'placeholder': 'Имя', 'class': 'form-control'}),
-            'phone': forms.TextInput(attrs={'placeholder': 'Телефон', 'class': 'form-control'}),
-        }
-
-
 class SignUp(forms.ModelForm):
     class Meta:
         model = Customer

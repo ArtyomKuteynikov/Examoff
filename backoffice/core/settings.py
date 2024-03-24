@@ -269,10 +269,6 @@ BATON = {
             'default_open': False,
             'models': (
                 {
-                    'name': 'ticket',
-                    'label': 'Поддержка'
-                },
-                {
                     'name': 'faq',
                     'label': 'FAQ'
                 },
@@ -295,3 +291,12 @@ USE_L10N = True
 LOCALE_PATHS = [
     os.path.join(BASE_DIR, 'locale'),  # Создайте директорию 'locale' в корне вашего проекта
 ]
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": [
+            "redis://127.0.0.1:6379",
+        ],
+    }
+}

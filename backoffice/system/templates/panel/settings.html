@@ -2,4 +2,254 @@
 
 {% block content %}
 
+<style>
+
+</style>
+
+<div style="display: flex;margin: 0 0 10px 0;">
+    <div class="rounded-circle" style="margin: 0 10px 0 0;min-width: 40px;height: 40px;background-color: #F8F9FB">
+        <i class="ci-gear" style="margin: 10px;color: #DAE0E6;"></i>
+    </div>
+    <h3 style="margin: auto 0;">
+        Настройки
+    </h3>
+</div>
+
+<div class="card">
+    <div class="row">
+        <div class="col-md-6" style="text-align: left;">
+            <h5>
+                Электронная почта
+            </h5>
+            <p class="gray" id="accountEmail">
+                {{ user.email }}
+            </p>
+        </div>
+        <div class="col-md-6">
+            <button class="btn btn-big" onclick="openEmailModal()">
+                Сменить почту
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="row">
+        <div class="col-md-6" style="text-align: left;">
+            <h5>
+                Пароль
+            </h5>
+            <p class="gray">
+                •••••••••
+            </p>
+        </div>
+        <div class="col-md-6">
+            <button class="btn btn-big" onclick="openChangePasswordModal()">
+                Сменить пароль
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="row">
+        <div class="col-md-6" style="text-align: left;">
+            <h5>
+                Автоплатеж
+            </h5>
+            <p class="gray">
+                Активен
+            </p>
+        </div>
+        <div class="col-md-6">
+            <button class="btn btn-big" onclick="">
+                Отключить
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="row">
+        <div class="col-md-6" style="text-align: left;">
+            <h5>
+                Быстрый вход с помощью Telegram
+            </h5>
+            <p class="gray">
+                Не активен
+            </p>
+        </div>
+        <div class="col-md-6">
+            <button class="btn btn-big" onclick="">
+                Подключить быстрый вход
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editEmailModal" tabindex="-1" role="dialog" aria-labelledby="editObjectModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Сменить электронную почту</h5>
+                <button type="button" class="btn-close" onclick="closeEmailModal()"></button>
+            </div>
+            <form method="post" id="editEmail">
+                <div class="modal-body">
+                    <div id="error-field-edit-email" class="alert alert-danger d-none"></div>
+                    <p class="gray" style="font-weight: lighter;font-size:12px;">
+                        Введите адрес электронной почты, чтобы иметь возможность восстановить доступ к аккаунту и получать уведомления безопасности
+                    </p>
+                    {% csrf_token %}
+                    <input id="email" name="email" class="form-control big-form-control" placeholder="Новый email">
+                    <button type="submit" class="btn btn-big">Отправить код на почту</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmationCodeModal" tabindex="-1" role="dialog" aria-labelledby="editObjectModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Подтвердите email</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" id="confirmEmail">
+                <div class="modal-body">
+                    <div id="error-field-confirm-email" class="alert alert-danger d-none"></div>
+                    <p class="gray">На ваш email было направлено письмо с кодом подтверждени, введите его.</p>
+                    {% csrf_token %}
+                    <input id="code" name="code" class="form-control big-form-control" placeholder="Введите код подтверждения">
+                    <button type="submit" class="btn btn-big">Подтвердить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="changePasswordModal" tabindex="-1" role="dialog" aria-labelledby="editObjectModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Сменить пароль</h5>
+                <button type="button" class="btn-close" onclick="closeChangePasswordModal()"></button>
+            </div>
+            <form method="post" id="changePassword">
+                <div class="modal-body">
+                    <div id="error-field-edit-password" class="alert alert-danger d-none"></div>
+                    {% csrf_token %}
+                    <input type="password" name="old-password" class="form-control big-form-control" placeholder="Старый пароль" required>
+                    <input type="password" name="new-password" class="form-control big-form-control" placeholder="Новый пароль" required>
+                    <button type="submit" class="btn btn-big">Отправить</button>
+
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openEmailModal() {
+        $('#editEmailModal').modal('show');
+    }
+
+    $('#editEmail').submit(function (e) {
+    e.preventDefault();
+    var formData = new FormData(this); // Создаем объект FormData для передачи данных формы
+        $.ajax({
+            type: "POST",
+            url: "/edit-profile/", // URL для обработки запроса на сервере
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                $('#editEmail')[0].reset();
+                $('input[name="csrfmiddlewaretoken"]').val(response.csrf_token);
+                $('#editEmailModal').modal('hide');
+                $('#confirmationCodeModal').modal('show');
+            },
+            error: function () {
+                var errorField = $('#error-field-confirm-email');
+                errorField.text("Пользователь с таким Email существует");
+                errorField.removeClass('d-none');
+
+                setTimeout(function () {
+                    errorField.addClass('d-none');
+                }, 5000);
+            }
+        });
+    });
+
+    $('#confirmEmail').submit(function (e) {
+    e.preventDefault();
+    var formData = new FormData(this); // Создаем объект FormData для передачи данных формы
+        $.ajax({
+            type: "POST",
+            url: "/edit-email-confirm/", // URL для обработки запроса на сервере
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                $('#confirmEmail')[0].reset();
+                $('input[name="csrfmiddlewaretoken"]').val(response.csrf_token);
+                $('#confirmationCodeModal').modal('hide');
+                $('#accountEmail').text(response.email);
+            },
+            error: function () {
+                var errorField = $('#error-field-edit-email');
+                errorField.text("Неверный код");
+                errorField.removeClass('d-none');
+
+                setTimeout(function () {
+                    errorField.addClass('d-none');
+                }, 5000);
+            }
+        });
+    });
+
+    function closeEmailModal() {
+        $('#editEmailModal').modal('hide');
+    }
+
+
+    function openChangePasswordModal() {
+        $('#changePasswordModal').modal('show');
+    }
+
+    $('#changePassword').submit(function (e) {
+    e.preventDefault();
+    var formData = new FormData(this); // Создаем объект FormData для передачи данных формы
+        $.ajax({
+            type: "POST",
+            url: "/edit-password/", // URL для обработки запроса на сервере
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                $('#changePassword')[0].reset();
+                $('input[name="csrfmiddlewaretoken"]').val(response.csrf_token);
+                $('#changePasswordModal').modal('hide');
+            },
+            error: function () {
+                var errorField = $('#error-field-edit-password');
+                errorField.text("Неверный пароль");
+                errorField.removeClass('d-none');
+
+                setTimeout(function () {
+                    errorField.addClass('d-none');
+                }, 5000);
+            }
+        });
+    });
+
+    function closeChangePasswordModal() {
+        $('#changePasswordModal').modal('hide');
+    }
+</script>
+
 {% endblock %}

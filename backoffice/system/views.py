@@ -1,4 +1,5 @@
 import datetime
+import random
 import time
 import uuid
 
@@ -7,14 +8,16 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
 from django.core.cache import cache
+from django.middleware.csrf import get_token
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from passlib.context import CryptContext
 from .models import Settings, Customer, Transactions, Subscriptions
 from django.utils import timezone
-from .forms import LoginForm, ResetForm, EmailForm, EditProfile, EditPassword, SignUp, SupportForm, SupportMessageForm, \
-    SubscribeForm
+from .forms import LoginForm, ResetForm, EmailForm, EditPassword, SignUp, SupportForm, SupportMessageForm,  SubscribeForm
 from support.models import TicketMessage, Ticket, FAQ
+
+from .utils import send_email
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -37,47 +40,74 @@ def panel(request):
 
 @login_required
 def profile(request):
-    profile_form = EditProfile(instance=request.user.customer)
-    password_form = EditPassword()
-    return render(request, 'panel/settings.html', {'profile_form': profile_form,
-                                                     'title': 'Настройки', 'password_form': password_form})
+    return render(request, 'panel/settings.html', {'title': 'Настройки'})
 
 
 @login_required
 def edit_password(request):
-    password_form = EditPassword(request.POST)
-    if pwd_context.verify(password_form.data['current_password'], request.user.password):
-        if password_form.data['password'] == password_form.data['confirm_password']:
-            employee = Customer.objects.filter(email=request.user.email, show=1).first()
-            employee.password = pwd_context.hash(password_form.data['password'])
-            employee.save()
-            login(request, Customer.objects.get(id=request.user.id))
-            return redirect('profile')
-        password_form.add_error(None, 'Пароли не совпадают')
-        profile_form = EditProfile(instance=request.user.employee)
-        return render(request, 'accounts/profile.html', {'profile_form': profile_form, 'title': 'Профиль',
-                                                         'password_form': password_form, 'page': 'password'})
-    password_form.add_error(None, 'Неверный текущий пароль')
-    profile_form = EditProfile(instance=request.user.employee)
-    return render(request, 'accounts/profile.html', {'profile_form': profile_form, 'title': 'Профиль',
-                                                     'password_form': password_form, 'page': 'password'})
+    old_password = request.POST.get('old-password')
+    new_password = request.POST.get('new-password')
+    if request.user.customer.verify_password(old_password):
+        print('OK')
+        employee = Customer.objects.filter(email=request.user.email, show=1).first()
+        employee.set_password_hash(new_password)
+        employee.save()
+        login(request, employee)
+        return JsonResponse(
+            {
+                'success': True,
+                'csrf_token': get_token(request)
+            }
+        )
+    return JsonResponse(
+        {'success': False}, status=401
+    )
 
 
 @login_required
 def edit_profile(request):
-    profile_form = EditProfile(request.POST, request.FILES, instance=request.user.employee)
-    if profile_form.is_valid():
-        profile_form.save()
-        return redirect('profile')
-    profile_form.add_error(None, 'Неверные поля')
-    password_form = EditProfile(instance=request.user.employee)
-    return render(request, 'accounts/profile.html', {'profile_form': profile_form, 'title': 'Профиль',
-                                                     'password_form': password_form, 'page': 'edit'})
+    email = request.POST.get('email')
+    if Customer.objects.filter(email=email).first():
+        JsonResponse(
+            {'success': False}, status=401
+        )
+    code = random.randint(100000, 999999)
+    cache.set(f'change:code:{request.user.email}', code, 3600)
+    cache.set(f'change:value:{request.user.email}', email, 3600)
+    message = f'''Здравствуйте, {request.user.customer.name}!
+Ваш код подтверждения электронной почты: {code} 
+
+С уважением,
+EXAMOFF'''
+    send_email(email, 'Смена Email', message)
+    return JsonResponse(
+        {
+            'success': True,
+            'csrf_token': get_token(request)
+        }
+    )
+
+
+@login_required
+def edit_profile_confirm(request):
+    code = request.POST.get('code')
+    print(code, cache.get(f'change:code:{request.user.email}'))
+    if str(code) != str(cache.get(f'change:code:{request.user.email}')):
+        return JsonResponse(
+            {'success': False}, status=401
+        )
+    new_email = cache.get(f'change:value:{request.user.email}')
+    customer = Customer.objects.get(id=request.user.customer.id)
+    customer.email = new_email
+    customer.save()
+    return JsonResponse(
+        {'success': True, 'email': new_email}
+    )
 
 
 @login_required
 def subscription(request):
-    return render(request, 'panel/subscription.html', {'invitation_tokens': Settings.objects.first().referer_tokens})
+    return render(request, 'panel/subscription.html', {'invitation_tokens': Settings.objects.first().referer_tokens, 'title': 'Подписка'})
 
 
 @login_required
@@ -154,7 +184,6 @@ def add_tokens(request):
         )
         transaction.save()
         return render(request, 'pay.html', {'price': price, 'transaction_id': transaction.id})
-
 
 
 def paid(request, transaction_id):

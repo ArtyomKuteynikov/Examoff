@@ -217,6 +217,14 @@
             background-size: cover;
         }
 
+        .ci-voice {
+            display: inline-block;
+            width: 14px;
+            height: 18px;
+            background-image: url('{% static '/icons/iconvoice.png' %}');
+            background-size: cover;
+        }
+
         .ci-star {
             display: inline-block;
             width: 20px;
@@ -242,6 +250,15 @@
             background-size: cover;
         }
 
+        .ci-faq {
+            margin: 1px 5px;
+            display: inline-block;
+            width: 18.33px;
+            height: 18.33px;
+            background-image: url('{% static '/icons/iconfaq.png' %}');
+            background-size: cover;
+        }
+
         span {
             font-size: 16px;
             color: #475467 !important;
@@ -249,6 +266,7 @@
 
         h1, h2, h3, h4, h5, h6 {
             color: #000 !important;
+            font-weight: bold;
         }
 
         p {
@@ -308,6 +326,19 @@
             background-color: #407BFF !important;
             padding: 15px;
             border-radius: 30px !important;
+            width: 260px;
+        }
+
+        .form-control {
+            border-radius: 15px !important;
+        }
+
+        .big-form-control {
+            margin: auto;
+            padding: 15px;
+            border-radius: 30px !important;
+            width: 260px;
+            margin-bottom: 25px
         }
 
         code {
@@ -321,6 +352,7 @@
         }
 
         .modal-content {
+            margin: 0;
             position: relative;
             display: -ms-flexbox;
             display: flex;
@@ -400,10 +432,21 @@
           color: blue;
         }
 
+        .gray {
+            color: #5F6D7E !important;
+        }
+
+        .fade {
+            padding: 0 !important;
+        }
+
     </style>
 </head>
 
-<body>
+<body id="body">
+{% load i18n %}
+{% load custom_tags %}
+{% load static %}
 <section>
     {% if user.is_authenticated %}
     <header id="header" class="header fixed-top d-flex align-items-center">
@@ -471,6 +514,14 @@
                     <span>Настройки</span>
                 </a>
             </li>
+            {% if user.customer.subscription %}
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="/">
+                    <i class="ci-voice"></i>
+                    <span>Запись голоса</span>
+                </a>
+            </li>
+            {% endif %}
 
             <li class="nav-item">
                 <a class="nav-link collapsed" href="/logout">
@@ -495,9 +546,9 @@
                     </div>
                     {% endif %}
                     <p>Осталось токенов: {{ user.customer.tokens }}
-                        <button style="padding: 0;height: 20px;width: 20px;" class="btn btn-info rounded-circle"
-                                onclick="openAddModal()">
-                            <p style="margin: auto;color:#fff !important;">+</p>
+                        <button style="padding: 0;height: 20px;width: 20px;font-size: 12px;"
+                                class="btn btn-info rounded-circle" onclick="openAddModal()">
+                            <i class="bi bi-plus-lg"></i>
                         </button>
                     </p>
                     {% if not user.customer.subscription %}
@@ -523,10 +574,10 @@
     {% endif %}
 
     <main id="main" class="main">
-
-        {% block content %}
-        {% endblock %}
-
+        <div id="content">
+            {% block content %}
+            {% endblock %}
+        </div>
     </main><!-- End #main -->
 
     {% if user.is_authenticated %}
@@ -561,7 +612,8 @@
 
                         <div>
                             <input class="slider" type="range" min="0" max="500000" step="50000" list="steplist"
-                                   value="40" onchange="updatePrice()" id="subscribe-add-tokens-input" name="added_tokens"/>
+                                   value="40" onchange="updatePrice()" id="subscribe-add-tokens-input"
+                                   name="added_tokens"/>
                             <datalist id="steplist">
                                 <option>0</option>
                                 <option>50000</option>
@@ -713,19 +765,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/suggestions-jquery@21.12.0/dist/js/jquery.suggestions.min.js"></script>
 <script>
-
-    function add_suggestions(){
-        $(".address-input").suggestions({
-            token: "9fb27fa25cf1f8e721e7d5fc8b82d0e6a9057f58",
-            type: "ADDRESS",
-                onSelect: function(suggestion) {}
-        });
-    }
-    add_suggestions();
-    function search(string){
-        window.find(string);
-    }
-
     function read(noteId) {
             fetch('/read/' + noteId)
                 .then(response => response.json())
@@ -747,6 +786,23 @@
             .catch(error => {
                 console.error('Error:', error);
             });
+    }
+</script>
+
+<script>
+    $(document).ready(function() {
+        // Обработчик кликов на ссылках
+        $('a.nav-link').click(function(e) {
+            e.preventDefault();
+            var url = $(this).attr('href');
+            $('#body').load(url);
+            history.pushState({}, '', url);
+        });
+    });
+
+    function openLink(url) {
+        $('#body').load(url);
+        history.pushState({}, '', url);
     }
 </script>
 </body>

@@ -17,6 +17,7 @@ urlpatterns = [
     path('settings/', profile, name='profile'),
     path('edit-password/', edit_password, name='edit-password'),
     path('edit-profile/', edit_profile, name='edit-profile'),
+    path('edit-email-confirm/', edit_profile_confirm, name='edit-email-confirm'),
     path('support/', support, name='support'),
     path('ticket/<int:ticket_id>/', ticket, name='ticket'),
     path('subscribe/', subscribe, name="subscribe"),

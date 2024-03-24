@@ -14,7 +14,7 @@
 
 <div class="card">
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-6" style="text-align: left;">
             {% if user.customer.subscription %}
             <h5>
                 Подписка активна
@@ -25,10 +25,10 @@
                 У вас нет активной подписки
             </h5>
             {% endif %}
-            <p>
+            <p class="gray">
                 Осталось токенов: {{ user.customer.tokens }}
-                <button style="padding: 0;height: 20px;width: 20px;" class="btn btn-info rounded-circle" onclick="openAddModal()">
-                    <p style="margin: auto;color:#fff !important;">+</p>
+                <button style="padding: 0;height: 20px;width: 20px;font-size: 12px;" class="btn btn-info rounded-circle" onclick="openAddModal()">
+                    <i class="bi bi-plus-lg"></i>
                 </button>
             </p>
         </div>
@@ -57,11 +57,11 @@
 
 <div class="card">
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-6" style="text-align: left;">
             <h5>
-                Пригласите друзей и получите до <b>{{ invitation_tokens }}</b> токенов
+                Пригласите друзей и получите до <b>{{ invitation_tokens }}</b> токенов бесплатно!
             </h5>
-            <p>
+            <p class="gray">
                 Осталось приглашений: {{ user.customer.referrings }}
             </p>
         </div>

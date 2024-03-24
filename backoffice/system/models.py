@@ -71,6 +71,7 @@ EXAMOFF'''
             return
 
     def verify_password(self, plain_password):
+        print(plain_password, self.password)
         return pwd_context.verify(plain_password, self.password)
 
     def referrings(self):
