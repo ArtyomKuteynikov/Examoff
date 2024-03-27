@@ -25,7 +25,9 @@ urlpatterns = [
     path('light/support/', support_light, name='support-light'),
     path('light/subscription/', subscription_light, name="subscribe-light"),
     path('light/settings/', profile_light, name='profile-light'),
+    path('light/voice/', voice_light, name="light-voice"),
     path('buy/', add_tokens, name="add-tokens"),
     path('paid/<int:transaction_id>', paid, name="paid"),
-    path('success/', success, name="success")
+    path('success/', success, name="success"),
+    path('voice/', voice, name="voice"),
 ]

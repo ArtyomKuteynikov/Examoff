@@ -2,4 +2,112 @@
 
 {% block content %}
 
+<div class="heading-div">
+    <div class="rounded-circle" style="margin: 0 10px 0 0;min-width: 40px;height: 40px;background-color: #F8F9FB">
+        <i class="ci-cabinet" style="margin: 10px;color: #DAE0E6;"></i>
+    </div>
+    <h3 style="margin: auto 0;">
+        Панель управления
+    </h3>
+</div>
+
+
+<div class="card">
+    <div class="row">
+        <div class="col-md-6" style="text-align: left;">
+            {% if user.customer.subscription %}
+            <h5>
+                Подписка активна
+            </h5>
+            <p class="gray">Активна до: {{ user.customer.subscription }}</p>
+            {% else %}
+            <h5>
+                У вас нет активной подписки
+            </h5>
+            {% endif %}
+            <p class="gray">
+                Осталось токенов: {{ user.customer.tokens }}
+                <button style="padding: 0;height: 20px;width: 20px;font-size: 12px;" class="btn btn-info rounded-circle"
+                        onclick="openAddModal()">
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+            </p>
+        </div>
+        <div class="col-md-6">
+            {% if not user.customer.subscription %}
+            <button class="btn btn-big" onclick="openSubscribeModal()">
+                Оформить подписку
+            </button>
+            {% else %}
+            <button class="btn btn-big" onclick="openSubscribeModal()">
+                Продлить подписку
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+
+<div class="heading-div">
+    <div class="rounded-circle" style="margin: 0 10px 0 0;min-width: 40px;height: 40px;background-color: #F8F9FB">
+        <i class="ci-new" style="margin: 10px;color: #DAE0E6;"></i>
+    </div>
+    <h3 style="margin: auto 0;">
+        Написание работ
+    </h3>
+</div>
+
+
+<div class="card">
+    <div class="row">
+        <div class="col-md-12" style="text-align: center;">
+            <i class="ci-add-black"></i>
+            <br>
+            <h5>Написать курсовую работу</h5>
+        </div>
+    </div>
+    <div style="color: #fff !important;text-align: center;padding: 0;height: 16px;width: 16px;font-size: 12px;background-color:#BABABA"
+         class="rounded-circle corner" title="Какой-то текст">
+        i
+    </div>
+</div>
+
+<div class="card">
+    <div class="row">
+        <div class="col-md-12" style="text-align: center;">
+            <i class="ci-add-black"></i>
+            <br>
+            <h5>Написать дипломную работу</h5>
+        </div>
+    </div>
+    <div style="color: #fff !important;text-align: center;padding: 0;height: 16px;width: 16px;font-size: 12px;background-color:#BABABA"
+         class="rounded-circle corner" title="Какой-то текст">
+        i
+    </div>
+</div>
+
+
+<div class="heading-div">
+    <div class="rounded-circle" style="margin: 0 10px 0 0;min-width: 40px;height: 40px;background-color: #F8F9FB">
+        <i class="ci-new" style="margin: 10px;color: #DAE0E6;"></i>
+    </div>
+    <h3 style="margin: auto 0;">
+        Помощь
+    </h3>
+</div>
+
+<div class="card">
+    <div class="row">
+        <div class="col-md-12" style="text-align: center;">
+            <i class="ci-add-black"></i>
+            <br>
+            <h5>Защита доклада</h5>
+        </div>
+    </div>
+    <div style="color: #fff !important;text-align: center;padding: 0;height: 16px;width: 16px;font-size: 12px;background-color:#BABABA"
+         class="rounded-circle corner" title="Какой-то текст">
+        i
+    </div>
+</div>
+
 {% endblock %}

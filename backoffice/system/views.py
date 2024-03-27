@@ -39,13 +39,23 @@ def panel(request):
 
 
 @login_required
+def voice(request):
+    return render(request, 'panel/voice.html')
+
+
+@login_required
+def voice_light(request):
+    return render(request, 'light-panel/voice.html')
+
+
+@login_required
 def profile(request):
     return render(request, 'panel/settings.html', {'title': 'Настройки'})
 
 
 def index_light(request):
     if request.user.is_authenticated:
-        return redirect('panel')
+        return redirect('panel-light')
     return render(request, 'light-panel/index.html', {'title': 'Главная'})
 
 

@@ -241,6 +241,15 @@
             background-size: cover;
         }
 
+        .ci-voice-white {
+            margin: 0 15px;
+            display: inline-block;
+            width: 17px;
+            height: 22px;
+            background-image: url(/static/icons/iconvoice-white.png);
+            background-size: cover;
+        }
+
         .ci-star {
             display: inline-block;
             width: 20px;
@@ -254,6 +263,14 @@
             width: 40px;
             height: 40px;
             background-image: url('{% static '/icons/add.png' %}');
+            background-size: cover;
+        }
+
+        .ci-add-black {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background-image: url('{% static '/icons/add-black.png' %}');
             background-size: cover;
         }
 
@@ -496,6 +513,12 @@
             font-weight: 500;
         }
 
+        .corner {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+        }
+
     </style>
 </head>
 
@@ -569,7 +592,7 @@
             </li>
             {% if user.customer.subscription %}
             <li class="nav-item">
-                <a class="nav-link nav-light collapsed" href="/light">
+                <a class="nav-link nav-light collapsed" href="/light/voice">
                     <i class="ci-voice"></i>
                     <span>Запись голоса</span>
                 </a>

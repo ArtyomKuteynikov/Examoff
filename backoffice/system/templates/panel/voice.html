@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="heading-div">
+    <div class="rounded-circle" style="margin: 0 10px 0 0;min-width: 40px;height: 40px;background-color: #F8F9FB">
+        <i class="ci-gear" style="margin: 10px;color: #DAE0E6;"></i>
+    </div>
+    <h3 style="margin: auto 0;">
+        Подготовка к работе с микрофоном
+    </h3>
+</div>
+<div style="margin: 20px 0;">
+    <h5>Для того, чтобы пользоваться помощью на защите с использованием микрофона, необходимо для начала дать нейросети
+        распознать и запомнить ваш голос</h5>
+</div>
+<div style="margin: 20px 0;">
+    <p>Когда будете готовы, нажмите на кнопку “Запись”, запись начнется автоматически, можете говорить, что угодно.<br>Запись
+        закончится автоматически</p>
+</div>
+
+<div style="margin: 40px 0;">
+
+    <button class="btn btn-big">
+        <div style="display: flex;justify-content: center;"><i class="ci-voice-white"></i>
+            <div>Начать запись</div>
+        </div>
+    </button>
+</div>
+
+<div class="card" style="display: flex;flex-direction: row;">
+    <div style="margin: auto;font-size: 14px;color: #fff !important;text-align: center;padding: 0;height: 20px;width: 20px;font-size: 14px;background-color:#BABABA"
+         class="rounded-circle">
+        i
+    </div>
+    <div style="width: 90% !important;">
+        <p class="m-0">Важно, чтобы источник записи был достаточно отчетливо слышен, чтобы система смогла определить запросы и на
+            основе
+            дать корректный ответ.</p>
+    </div>
+</div>
+
+{% endblock %}

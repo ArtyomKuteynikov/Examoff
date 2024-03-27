@@ -158,4 +158,11 @@
 <div style="position: fixed; bottom: 10px; left: 10px;"><p>©Examoff 2024</p></div>
 </body>
 
+<script>
+    function openLink(url) {
+        $('body').load(url);
+        history.pushState({}, '', url);
+    }
+</script>
+
 </html>

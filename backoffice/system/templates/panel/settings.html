@@ -2,10 +2,6 @@
 
 {% block content %}
 
-<style>
-
-</style>
-
 <div class="heading-div">
     <div class="rounded-circle" style="margin: 0 10px 0 0;min-width: 40px;height: 40px;background-color: #F8F9FB">
         <i class="ci-gear" style="margin: 10px;color: #DAE0E6;"></i>
@@ -58,13 +54,23 @@
                 Автоплатеж
             </h5>
             <p class="gray">
-                Активен
+                {% if user.customer.auto_payment %}
+                    Активен
+                {% else %}
+                    Не активен
+                {% endif %}
             </p>
         </div>
         <div class="col-md-6">
-            <button class="btn btn-big" onclick="">
-                Отключить
-            </button>
+            {% if user.customer.auto_payment %}
+                <button class="btn btn-big" onclick="openTurnoffModal()">
+                    Отключить
+                </button>
+            {% else %}
+                <button class="btn btn-big" onclick="openTurnonModal()">
+                    Подключить
+                </button>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -147,6 +153,42 @@
                     <input type="password" name="new-password" class="form-control big-form-control" placeholder="Новый пароль" required>
                     <button type="submit" class="btn btn-big">Отправить</button>
 
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="TurnoffModal" tabindex="-1" role="dialog" aria-labelledby="editObjectModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Вы уверены что хотите отключить автоплатеж?</h5>
+                <button type="button" class="btn-close" onclick="closeTurnoffModal()"></button>
+            </div>
+            <form id="turnOff">
+                <div class="modal-body" style="display: flex;">
+                    <button type="submit" class="btn btn-big">Да</button>
+                    <button onclick="closeTurnoffModal()" class="btn btn-big">Нет</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="TurnonModal" tabindex="-1" role="dialog" aria-labelledby="editObjectModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Вы уверены что хотите подключить автоплатеж?</h5>
+                <button type="button" class="btn-close" onclick="closeTurnonModal()"></button>
+            </div>
+            <form id="turnOn">
+                <div class="modal-body" style="display: flex;">
+                    <button type="submit" class="btn btn-big">Да</button>
+                    <button onclick="closeTurnonModal()" class="btn btn-big">Нет</button>
                 </div>
             </form>
         </div>
@@ -249,6 +291,24 @@
 
     function closeChangePasswordModal() {
         $('#changePasswordModal').modal('hide');
+    }
+
+
+    function openTurnoffModal() {
+        $('#TurnoffModal').modal('show');
+    }
+
+    function closeTurnoffModal() {
+        $('#TurnoffModal').modal('hide');
+    }
+
+
+    function openTurnonModal() {
+        $('#TurnonModal').modal('show');
+    }
+
+    function closeTurnonModal() {
+        $('#TurnonModal').modal('hide');
     }
 </script>
 

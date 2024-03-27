@@ -9,7 +9,7 @@
         {{ form.as_p }}
     </div>
     <button type="submit" class="btn btn-info is-fullwidth">Войти</button>
-    <p>Еще нет аккаунта? <a href="/signup">Зарегистрироваться</a></p>
-    <a href="/request">Забыли пароль?</a>
+    <p>Еще нет аккаунта? <a onclick="openLink('/signup')">Зарегистрироваться</a></p>
+    <a onclick="openLink('/request')">Забыли пароль?</a>
 </form>
 {% endblock %}
