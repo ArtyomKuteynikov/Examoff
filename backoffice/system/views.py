@@ -35,12 +35,28 @@ def index(request):
 
 @login_required
 def panel(request):
-    return render(request, 'panel/panel.html', {'title': 'Кабинет'})
+    return render(request, 'panel/panel.html')
 
 
 @login_required
 def profile(request):
     return render(request, 'panel/settings.html', {'title': 'Настройки'})
+
+
+def index_light(request):
+    if request.user.is_authenticated:
+        return redirect('panel')
+    return render(request, 'light-panel/index.html', {'title': 'Главная'})
+
+
+@login_required
+def panel_light(request):
+    return render(request, 'light-panel/panel.html', {'title': 'Кабинет'})
+
+
+@login_required
+def profile_light(request):
+    return render(request, 'light-panel/settings.html', {'title': 'Настройки'})
 
 
 @login_required
@@ -78,7 +94,7 @@ def edit_profile(request):
 Ваш код подтверждения электронной почты: {code} 
 
 С уважением,
-EXAMOFF'''
+Examoff'''
     send_email(email, 'Смена Email', message)
     return JsonResponse(
         {
@@ -111,47 +127,20 @@ def subscription(request):
 
 
 @login_required
-def support(request):
-    if request.method == 'POST':
-        form = SupportForm(request.POST, request.FILES)
-        new_ticket = Ticket(
-            title=form.data['title'],
-            priority=1,
-            client=request.user.customer,
-            status=0
-        )
-        new_ticket.save()
-        message = TicketMessage(
-            message=form.data['comment'],
-            author=0,
-            ticket=new_ticket,
-            attachment=request.FILES['file'] if 'file' in request.FILES else '',
-            read=0
-        )
-        message.save()
-    tickets = Ticket.objects.filter(client=request.user).all()
+def support_light(request):
     faq = FAQ.objects.all()
-    form = SupportForm()
-    return render(request, 'panel/support.html', {'tickets': tickets, 'faq': faq, 'form': form, 'title': 'Помощь'})
+    return render(request, 'light-panel/support.html', {'faq': faq, 'title': 'Помощь'})
 
 
 @login_required
-def ticket(request, ticket_id):
-    if request.method == 'POST':
-        form = SupportMessageForm(request.POST, request.FILES)
-        message = TicketMessage(
-            message=form.data['message'],
-            author=0,
-            ticket_id=ticket_id,
-            attachment=request.FILES['file'] if 'file' in request.FILES else '',
-            read=0
-        )
-        message.save()
-    for message in TicketMessage.objects.filter(ticket_id=ticket_id, author=1).all():
-        message.read = True
-        message.save()
-    ticket_messages = TicketMessage.objects.filter(ticket_id=ticket_id).all()
-    return render(request, 'panel/ticket.html', {'msgs': ticket_messages, 'ticket_id': ticket_id, 'title': f'Тикет №{ticket_id}'})
+def subscription_light(request):
+    return render(request, 'light-panel/subscription.html', {'invitation_tokens': Settings.objects.first().referer_tokens, 'title': 'Подписка'})
+
+
+@login_required
+def support(request):
+    faq = FAQ.objects.all()
+    return render(request, 'panel/support.html', {'faq': faq, 'title': 'Помощь'})
 
 
 @login_required
@@ -265,7 +254,6 @@ def login_view(request):
 def set_password(request, token):
     form = ResetForm()
     email = cache.get(f'email:confirm:{token}')
-    print(email)
     if not email:
         return render(request, 'auth/expired.html', {'form': form, 'token': token})
     if request.method == 'POST':

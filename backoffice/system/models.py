@@ -55,7 +55,7 @@ class Customer(User):
 Подтвердите аккаунт перейдя по ссылке: {HOST}/confirm/{token}
 
 С уважением,
-EXAMOFF'''
+Examoff'''
             send_email(self.email, 'Подтверждение аккаунта', message)
             return
 
@@ -66,7 +66,7 @@ EXAMOFF'''
 Для сброса пароля перейдите по ссылке: {HOST}/reset/{token}
 
 С уважением,
-EXAMOFF'''
+Examoff'''
             send_email(self.email, 'Сброс пароля', message)
             return
 

@@ -78,6 +78,18 @@
         body {
             background: #f6f9ff;
             color: green !important;
+            font-family: "Onest", sans-serif;
+        }
+        h1, h2, h3, h4, h5, h6, p, span, i, b, strong {
+            font-family: "Onest", sans-serif;
+        }
+        h3 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        h5 {
+            font-size: 18px;
+            font-weight: 600;
         }
         .table td, .table th {
             font-size: 12px;
@@ -137,7 +149,11 @@
             height: 60px;
             box-shadow: 0px 2px 20px transparent !important;
             background-color: transparent !important;
-            padding-left: 20px;
+            padding-left: 50px;
+        }
+        .heading-div {
+            display: flex;
+            margin: 0 0 40px 0;
         }
         .sidebar {
             top: 0 !important;
@@ -269,6 +285,8 @@
         span {
             font-size: 16px;
             color: #475467 !important;
+            font-weight: 500;
+
         }
 
         h1, h2, h3, h4, h5, h6 {
@@ -277,9 +295,13 @@
         }
 
         p {
-            font-weight: 800;
+            color: #5F6D7E !important;
             font-size: 14px;
-            color: #000 !important;
+            font-weight: 500;
+        }
+
+        .info-block {
+            margin-bottom: 40px;
         }
 
         .card-subscription {
@@ -292,7 +314,7 @@
         }
 
         .card {
-            padding: 20px;
+            padding: 20px 30px;
             border-radius: 10px;
             background-color: #F8F9FB !important;
             box-shadow: 0px 0 30px rgba(256, 256, 256, 0.1) !important;
@@ -441,10 +463,37 @@
 
         .gray {
             color: #5F6D7E !important;
+            font-size: 14px;
+            font-weight: 500;
+
         }
 
         .fade {
             padding: 0 !important;
+        }
+
+        .sidebar {
+            top: 0 !important;
+            padding: 60px 50px !important;
+        }
+
+        .sidebar-nav .nav-link.collapsed {
+            padding-left: 0px;
+            padding-right: 0;
+        }
+        .form-check {
+            text-align: left;
+            font-size: 14px;
+            margin: 10px;
+            position: relative;
+            display: block;
+            padding-left: 1.25rem;
+        }
+
+        label {
+            color: #000 !important;
+            font-size: 14px;
+            font-weight: 500;
         }
 
     </style>
@@ -466,10 +515,7 @@
                     Examoff
                 </h6>
             </div>
-        </div><!-- End Logo -->
-        <nav class="header-nav ms-auto">
-            <h6 style="overflow-x: visible;text-wrap: nowrap;">{{ title }}</h6>
-        </nav>
+        </div>
 
     </header><!-- End Header -->
 
@@ -481,49 +527,49 @@
             </li>
 
             <li class="nav-item">
-                <a class="btn btn-new" href="/">
+                <a class="btn btn-new m-0" href="/light">
                     <i class="ci-add"></i>
                     <br>
                     Новая задача
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link collapsed" href="/">
+                <a class="nav-link nav-light collapsed" href="/light">
                     <i class="ci-cabinet"></i>
                     <span>Кабинет</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link collapsed" href="/">
+                <a class="nav-link nav-light collapsed" href="/light">
                     <i class="ci-new"></i>
                     <span>Новая задача</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link collapsed" href="/subscription">
+                <a class="nav-link nav-light collapsed" href="/light/subscription">
                     <i class="ci-star"></i>
                     <span>Подписка</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link collapsed" href="/support">
+                <a class="nav-link nav-light collapsed" href="/light/support">
                     <i class="ci-help"></i>
                     <span>Помощь</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link collapsed" href="/settings">
+                <a class="nav-link nav-light collapsed" href="/light/settings">
                     <i class="ci-gear"></i>
                     <span>Настройки</span>
                 </a>
             </li>
             {% if user.customer.subscription %}
             <li class="nav-item">
-                <a class="nav-link collapsed" href="/">
+                <a class="nav-link nav-light collapsed" href="/light">
                     <i class="ci-voice"></i>
                     <span>Запись голоса</span>
                 </a>
@@ -544,7 +590,7 @@
                         <i class="ci-settings"></i>
                         <h6>Подписка активна</h6>
                     </div>
-                    <p>Активна до: {% time_date user.customer.subscription %}</p>
+                    <p class="gray">Активна до: {% time_date user.customer.subscription %}</p>
 
                     {% else %}
                     <div style="display: flex;justify-content: center;">
@@ -552,7 +598,7 @@
                         <h6>У вас нет подписки</h6>
                     </div>
                     {% endif %}
-                    <p>Осталось токенов: {{ user.customer.tokens }}
+                    <p class="gray">Осталось токенов: {{ user.customer.tokens }}
                         <button style="padding: 0;height: 20px;width: 20px;font-size: 12px;"
                                 class="btn btn-info rounded-circle" onclick="openAddModal()">
                             <i class="bi bi-plus-lg"></i>
@@ -565,13 +611,15 @@
                     {% endif %}
                 </div>
             </li>
-            <li class="nav-heading">Аккаунт</li>
-            <li class="nav-item" style="display: flex;padding: 10px 15px;">
+            <li class="nav-heading" style="margin-left: 0;">
+                <p class="gray m-0">Аккаунт</p>
+            </li>
+            <li class="nav-item" style="display: flex;padding: 10px 0px;">
                 <div class="rounded-circle"
                      style="margin: 0 10px 0 0;padding: 4px 0;min-width: 32px;min-height: 32px;background-color: #437EF7">
                     <i class="bi bi-person" style="margin: 8px;max-height: 16px;font-size: 16px;color: #fff;"></i>
                 </div>
-                <p style="margin: auto;font-size: 12px;">{{ user.email }}</p>
+                <p style="margin: auto;font-weight: 600;color: #000;">{{ user.email }}</p>
             </li>
 
         </ul>
@@ -599,11 +647,11 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <p>Получите доступ к функционалу Examoff прямо сейчас!</p>
+                    <p style="color: #000 !important;">Получите доступ к функционалу Examoff прямо сейчас!</p>
 
                     <div style="display: flex;">
                         <strong id="subscribe-price">{% price user.customer.settings.subscription_price %} ₽</strong>
-                        <p style="margin: auto;">За 1 месяц</p>
+                        <p style="margin: auto;color: #000 !important;">За 1 месяц</p>
                     </div>
 
                     <div>
@@ -613,7 +661,7 @@
                         {% csrf_token %}
                         <button type="submit" class="btn btn-big">Оформить подписку</button>
 
-                        <p style="text-align: center">
+                        <p style="text-align: center;color: #000 !important;">
                             Вы можете докупить токены дополнительно, просто двигайте ползунок вправо
                         </p>
 
@@ -643,6 +691,12 @@
                                 <span class="o_txt">500K</span>
                             </div>
                         </div>
+                        <div class="form-check">
+                            <input class="form-check-input" name="auto-payment" type="checkbox" id="gridCheck2" checked="">
+                            <label class="form-check-label" for="gridCheck2">
+                                Подключить автоплатеж
+                            </label>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -660,7 +714,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <p>Вы можете купить токены дополнительно, просто двигайте ползунок вправо</p>
+                    <p style="color: #000 !important;">Вы можете купить токены дополнительно, просто двигайте ползунок вправо</p>
 
                     <div style="display: flex;">
                         <strong id="add-tokens-price">0.00 ₽</strong>
@@ -799,17 +853,18 @@
 <script>
     $(document).ready(function() {
         // Обработчик кликов на ссылках
-        $('a.nav-link').click(function(e) {
+        $('a.nav-light').click(function(e) {
             e.preventDefault();
             var url = $(this).attr('href');
-            $('#body').load(url);
-            history.pushState({}, '', url);
+            $('#content').load(url);
+            history.pushState({}, '', url.replace('/light', ''));
+            $('#title').text($(this).find('span').text());
         });
     });
 
     function openLink(url) {
-        $('#body').load(url);
-        history.pushState({}, '', url);
+        $('#content').load(url);
+        history.pushState({}, '', url.replace('/light', ''));
     }
 </script>
 </body>
