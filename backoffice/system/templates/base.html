@@ -527,14 +527,15 @@
 {% load custom_tags %}
 {% load static %}
 <section>
+
     {% if user.is_authenticated %}
     <header id="header" class="header fixed-top d-flex align-items-center">
-
+        <i style="position: absolute;left: 10px;" class="bi bi-list toggle-sidebar-btn d-xl-none"></i>
         <div class="d-flex align-items-center justify-content-between">
             <div style="display: flex;padding: 10px 15px;">
                 <img style="height: 27px;" src="{% static 'logo.png' %}">
-                <h6 class="toggle-sidebar-btn"
-                    style="margin: 0;white-space: nowrap;color:#026AA2;font-size: 16px;text-align: center;margin: auto;color: #000 !important;font-weight: bold;">
+                <h6
+                    style="padding-left: 10px;margin: 0;white-space: nowrap;color:#026AA2;font-size: 16px;text-align: center;margin: auto;color: #000 !important;font-weight: bold;">
                     Examoff
                 </h6>
             </div>

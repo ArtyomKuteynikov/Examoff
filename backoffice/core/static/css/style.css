@@ -48,7 +48,7 @@ h6 {
 
 @media (max-width: 1199px) {
   #main {
-    padding: 20px;
+    padding: 20px 80px 20px 100px;
   }
 }
 
