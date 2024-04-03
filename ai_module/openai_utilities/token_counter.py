@@ -7,10 +7,14 @@ import os
 import tiktoken
 
 from typing import List
+
+from dotenv import load_dotenv
 from openai import OpenAI
 
 from ai_module.schemas.enums import GPT_Model
 from ai_module.schemas.message import Message, messages_to_openai_format, SystemMessage, UserMessage
+
+load_dotenv()
 
 
 def num_tokens_from_messages(messages: List[Message], model: str = "gpt-3.5-turbo-0613") -> int:

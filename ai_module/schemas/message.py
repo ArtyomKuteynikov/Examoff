@@ -63,4 +63,4 @@ def messages_to_openai_format(messages: List[Message]) -> list[dict[str, str]]:
         },
     ]
     """
-    return [message.dict() for message in messages]
+    return [message.model_dump() for message in messages]

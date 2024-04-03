@@ -1,21 +1,25 @@
 """
 Модуль для создания запросов к API OpenAI.
 """
+import os
 from typing import List, Optional
 
+from dotenv import load_dotenv
 from openai import OpenAI
 
 from ai_module.schemas.completion import Completion
 from ai_module.schemas.message import Message, messages_to_openai_format
 
-client = OpenAI()
+load_dotenv()
+
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", "OPENAI_API_KEY is empty"))
 
 
 def create_openai_completion(
         model: str,
         messages: List[Message],
-        max_tokens: Optional[int],
-        temperature: Optional[float],
+        max_tokens: Optional[int] = None,
+        temperature: Optional[float] = None,
 ) -> Completion:
     """
     Создание request диалога к OpenAI. На выходе ожидается сгенерированный текст с его метаданными.
