@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'adminsortable2',
     'rangefilter',
     'ckeditor',
+    'messenger'
 ]
 
 MIDDLEWARE = [
