@@ -1,21 +1,9 @@
-import datetime
 import json
-import re
-import time
 from collections import defaultdict
-from typing import List
-import base64
-from config.main import SECRET_AUTH
-from PIL import Image
-from io import BytesIO
-from os import getcwd
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, Query
-from fastapi_jwt_auth import AuthJWT
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from gateway.config.main import SECRET_AUTH
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 from fastapi import HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse
-from config.database import async_session_maker, get_db
+from gateway.config.database import async_session_maker
 import jwt
 
 router = APIRouter(
@@ -66,7 +54,7 @@ class ConnectionManager:
         message_text = message['message']
         msg = await self.add_messages_to_database(message_text, room_id, user_id)
         # TODO: начать выполнять обработку через ChatGPT, первым вернуть сообщение
-        data = {"message": message_text, "sender": user_id, "message_id": msg.id}
+        data = {"message": message_text, "sender": user_id, "message_id": msg}
         for connection in self.connections[room_id]:
             try:
                 await connection.send_text(json.dumps(data))
@@ -78,10 +66,11 @@ class ConnectionManager:
     async def add_messages_to_database(message: str, room_id: int, user_id):
         async with async_session_maker() as session:
             # TODO: добавить сохранение в БД
-            msg = ()
-            session.add(msg)
-            await session.commit()
-        return msg
+            # msg = ()
+            # session.add(msg)
+            # await session.commit()
+            pass
+        return 'tut'
 
 
 manager = ConnectionManager()
@@ -92,7 +81,7 @@ async def websocket(websocket: WebSocket, token: str = Query(...)):
     data = await check_token(token)
     if not data:
         raise HTTPException(status_code=403, detail='incorrect_token')
-    current_user, room_id= data
+    current_user, room_id = data
     await manager.connect(websocket, room_id)
     try:
         while True:

@@ -1,15 +1,20 @@
+from dotenv import load_dotenv
 from redis import asyncio as aioredis
-from fastapi import FastAPI, Request, Depends, HTTPException, Form
+from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
 from fastapi_pagination import add_pagination
-from fastapi.responses import HTMLResponse, JSONResponse
-from config.database import get_db, init_db
-from config.main import Settings
-from chat.router import router as router_chat
+from fastapi.responses import JSONResponse
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from gateway.config.database import init_db, get_db
+from gateway.config.main import Settings
+from gateway.chat.router import router as router_chat
+from gateway.db.messages.repo import MessageRepo
+load_dotenv()
 
 app = FastAPI(
     title="Examoff",
@@ -35,7 +40,7 @@ def get_config():
 
 
 @app.exception_handler(AuthJWTException)
-def authjwt_exception_handler(request: Request, exc: AuthJWTException):
+def auth_jwt_exception_handler(request: Request, exc: AuthJWTException):
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.message}
@@ -56,3 +61,11 @@ async def startup_event():
 async def shutdown_event():
     global redis_pool
     await redis_pool.close()
+
+
+@app.get("/")
+async def root(session: AsyncSession = Depends(get_db)):
+
+    repo = MessageRepo(session=session)
+    a = await repo.get_all()
+    return {"message": "Hello World"}
