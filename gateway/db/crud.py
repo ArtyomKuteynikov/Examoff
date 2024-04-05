@@ -20,6 +20,7 @@ class CRUD:
         query = insert(self._cls_model).values(**model_data)
 
         res = await self._session.execute(query)  # noqa: WPS204
+        await self._session.commit()
         return res.inserted_primary_key
 
     async def update(
