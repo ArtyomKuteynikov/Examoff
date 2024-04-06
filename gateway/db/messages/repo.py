@@ -23,6 +23,7 @@ class MessageRepo:
                 "text": message_in_creation.text,
                 "sender_id": message_in_creation.sender_id,
                 "created_at": message_in_creation.created_at,
+                "response_specific_state": message_in_creation.response_specific_state,
             }
         )
         return await self.get_message_by_id(message_row.id)

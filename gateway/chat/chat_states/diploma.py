@@ -3,12 +3,13 @@ from enum import Enum, auto
 
 from starlette.websockets import WebSocket
 
+from gateway.chat.processing_message.diploma import process_user_message_on_welcome_message_status
 from gateway.config.database import get_db, add_messages_to_database
 from gateway.db.chats.repo import ChatRepo
 from gateway.resources import strings
 from gateway.schemas.chat import ChatSchema
 from gateway.schemas.enums import WebsocketMessageType
-from gateway.schemas.message import MessageInCreationSchema
+from gateway.schemas.message import MessageInCreationSchema, MessageSchema
 from gateway.schemas.websocket_data import WebsocketMessageData, websocket_message_data_to_websocket_format
 
 
@@ -49,7 +50,6 @@ class DiplomaChatStateEnum(StrEnum):
 
 
 class DiplomaChatStateHandler:
-
     def __init__(self):
         self.state_methods = {
             DiplomaChatStateEnum.WELCOME_MESSAGE: self._diploma_welcome_message,
@@ -90,34 +90,65 @@ class DiplomaChatStateHandler:
             chat.chat_state = DiplomaChatStateEnum.WELCOME_MESSAGE
             await chat_repo.update_chat(chat)
 
-    def handle_message(self, chat_state: str):
-        method = self.state_methods.get(chat_state)
+    async def handle_message(self, chat: ChatSchema, message: MessageSchema, connections):
+        method = self.state_methods.get(chat.chat_state)
         if method:
-            method()
+            await method(chat, message, connections)
 
-    def _diploma_welcome_message(self):
-        print('_diploma_welcome_message')
+    @staticmethod
+    async def _diploma_welcome_message(chat: ChatSchema, message: MessageSchema, connections):
+        answer = process_user_message_on_welcome_message_status(message.text)
+        if answer == 0:
+            pass
+        elif answer == 1:
+            # Отправляет сообщение по websockets.
+            websocket_message = WebsocketMessageData(
+                message_type=WebsocketMessageType.SYSTEM_MESSAGE,
+                data={
+                    "message_text": strings.DIPLOMA_ASK_THEME
+                },
+            )
+            for connect in connections[chat.id]:
+                data = websocket_message_data_to_websocket_format(websocket_message)
+                await connect.send_text(data)
 
-    def _diploma_ask_theme(self):
+            # Записывает сообщение в БД.
+            message_in_creation = MessageInCreationSchema(
+                chat_id=chat.id,
+                text=strings.DIPLOMA_ASK_THEME,
+                sender_id=1,  # todo Change to Admin ID
+            )
+            await add_messages_to_database(message_in_creation)
+
+            # Обновляет состояние в базе.
+            async for session in get_db():
+                chat_repo = ChatRepo(session)
+                chat.chat_state = DiplomaChatStateEnum.ASK_THEME
+                await chat_repo.update_chat(chat)
+            pass
+        elif answer == 2:
+            pass
+
+    async def _diploma_ask_theme(self, chat: ChatSchema, message, connections):
         print('_diploma_ask_theme')
 
-    def _diploma_ask_page_number(self):
+    async def _diploma_ask_page_number(self, chat: ChatSchema, message, connections):
         print('_diploma_ask_page_number')
 
-    def _diploma_ask_other_requirements(self):
+    async def _diploma_ask_other_requirements(self, chat: ChatSchema, message, connections):
         print('_diploma_ask_other_requirements')
 
-    def _diploma_ask_information_source(self):
+    async def _diploma_ask_information_source(self, chat: ChatSchema, message, connections):
         print('_diploma_ask_information_source')
 
-    def _diploma_ask_any_information(self):
+    async def _diploma_ask_any_information(self, chat: ChatSchema, message, connections):
         print('_diploma_ask_any_information')
 
-    def _diploma_ask_accept_plan(self):
+    async def _diploma_ask_accept_plan(self, chat: ChatSchema, message, connections):
         print('_diploma_ask_accept_plan')
 
-    def _diploma_ask_accept_text_structure(self):
+    async def _diploma_ask_accept_text_structure(self, chat: ChatSchema, message, connections):
         print('_diploma_ask_accept_text_structure')
 
-    def _diploma_dialog_is_over(self):
+    async def _diploma_dialog_is_over(self, chat: ChatSchema, message, connections):
         print('_diploma_dialog_is_over')

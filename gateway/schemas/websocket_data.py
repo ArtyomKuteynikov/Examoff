@@ -52,4 +52,4 @@ def websocket_message_data_to_websocket_format(message: WebsocketMessageData) ->
             }
         }
     """
-    return dumps({"message_type": message.message_type.value, "data": message.data, })
+    return dumps({"message_type": message.message_type.value, "data": message.data, }, ensure_ascii=False)

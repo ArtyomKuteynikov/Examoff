@@ -51,9 +51,9 @@ class ConnectionManager:
     def disconnect(self, websocket: WebSocket, chat_id: int):
         self.connections[chat_id].remove(websocket)
 
-    async def check_first_connection(self, chat: ChatSchema, websocket: WebSocket):
+    async def check_first_connection(self, chat: ChatSchema):
         if chat.chat_state is None:
-            await self.fsm.init_first_message(chat, websocket, self.connections)
+            await self.fsm.init_first_message(chat, self.connections)
 
     async def get_notification_generator(self):
         while True:
@@ -80,12 +80,13 @@ class ConnectionManager:
                 chat_id=chat.id,
                 text=websocket_message.data["message_text"],
                 sender_id=user_id,
+                response_specific_state=chat.chat_state,
             )
-            await add_messages_to_database(message_in_creation)
+            message_ib_db = await add_messages_to_database(message_in_creation)
             if len(self.connections[chat.id]):
                 await self.repeat_user_message_to_other_connections(websocket, chat.id, websocket_message)
 
-            self.fsm.fsm_handle_message(chat.chat_type, chat.chat_state)
+            await self.fsm.fsm_handle_message(chat, message_ib_db, self.connections)
 
     async def send_websocket_message(self, chat_id: int):
         for connect in self.connections[chat_id]:
@@ -118,7 +119,7 @@ async def websocket_connection(websocket: WebSocket, token: str = Query(...), se
 
     chat_repo = ChatRepo(session=session)
     chat = await chat_repo.get_chat_by_id(connection_data.chat_id)
-    await manager.check_first_connection(chat, websocket)
+    await manager.check_first_connection(chat)
     try:
         while True:
             json_data = await websocket.receive_json()

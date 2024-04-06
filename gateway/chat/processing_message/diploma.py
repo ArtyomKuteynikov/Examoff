@@ -16,16 +16,13 @@ def process_user_message_on_welcome_message_status(user_answer: str):
     messages = [
         SystemMessage(content=strings.SYSTEM_CONTEXT_DIPLOMA_WELCOME_MESSAGE),
         AssistantMessage(content=strings.DIPLOMA_WELCOME_MESSAGE),
-        UserMessage(content=user_answer+strings.END_OF_USER_MESSAGE_DIPLOMA_WELCOME_MESSAGE),
+        UserMessage(content=user_answer + strings.END_OF_USER_MESSAGE_DIPLOMA_WELCOME_MESSAGE),
     ]
-    pprint(messages_to_openai_format(messages))
-
     completion = client.chat.completions.create(
         model=GPT_Model.GPT_3_5_TURBO_0125,
         messages=messages_to_openai_format(messages),
     )
-    print(f'{completion.usage} prompt tokens counted by the OpenAI API.')
-    print(completion.choices[0].message.content)
-
-
-process_user_message_on_welcome_message_status('Текст')
+    try:
+        return int(completion.choices[0].message.content)
+    except TypeError:
+        return 0

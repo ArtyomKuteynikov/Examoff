@@ -16,3 +16,4 @@ class MessageModel(Base):
     text: str = Column(String, nullable=False)
     created_at: datetime = Column(DateTime(timezone=True), nullable=False)
     sender_id: int = Column(ForeignKey("auth_user.id", ondelete="CASCADE"), primary_key=True)
+    response_specific_state: str = Column(String(100), nullable=True)

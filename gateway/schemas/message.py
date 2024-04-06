@@ -41,6 +41,7 @@ class MessageSchema(BaseModel):
     text: str
     sender_id: int
     created_at: datetime
+    response_specific_state: Optional[str] = None
 
 
 class MessageInCreationSchema(BaseModel):
@@ -74,3 +75,4 @@ class MessageInCreationSchema(BaseModel):
     text: str
     sender_id: int
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    response_specific_state: Optional[str] = None

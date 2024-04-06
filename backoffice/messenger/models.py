@@ -37,6 +37,7 @@ class Message(models.Model):
     sender = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Отправитель")
     text = models.TextField(verbose_name="Текст сообщения")
     created_at = models.DateTimeField(auto_now_add=True)
+    response_specific_state = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta:
         ordering = ('created_at',)
