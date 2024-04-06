@@ -1,12 +1,18 @@
 import json
 from collections import defaultdict
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from gateway.chat.chat_states.fsm import FSM
 from gateway.config.main import SECRET_AUTH
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, Depends
 from fastapi import HTTPException
 from gateway.config.database import async_session_maker, get_db
 import jwt
 
+from gateway.db.chats.repo import ChatRepo
 from gateway.db.messages.repo import MessageRepo
+from gateway.schemas.chat import ChatSchema
 from gateway.schemas.enums import WebsocketMessageType
 from gateway.schemas.message import MessageSchema, MessageInCreationSchema
 from gateway.schemas.token import JWTTokenPayloadDataSchema
@@ -61,29 +67,21 @@ class ConnectionManager:
             self,
             websocket: WebSocket,
             websocket_message: WebsocketMessageData,
-            chat_id: int,
+            chat: ChatSchema,
             user_id: int
     ):
         if websocket_message.message_type == WebsocketMessageType.USER_MESSAGE:
             message_in_creation = MessageInCreationSchema(
-                chat_id=chat_id,
+                chat_id=chat.id,
                 text=websocket_message.data["message_text"],
                 sender_id=user_id,
             )
             msg = await self.add_messages_to_database(message_in_creation)
-            if len(self.connections[chat_id]):
-                await self.repeat_user_message_to_other_connections(websocket, chat_id, websocket_message)
+            if len(self.connections[chat.id]):
+                await self.repeat_user_message_to_other_connections(websocket, chat.id, websocket_message)
 
-            await self.send_websocket_message(chat_id)
-
-            # TODO: начать выполнять обработку через ChatGPT, первым вернуть сообщение
-            # data = {"message": message_text, "sender": user_id, "message_id": msg}
-            # for connection in self.connections[chat_id]:
-            #     try:
-            #         await connection.send_text(json.dumps(data))
-            #         # TODO: потом вернуть юзеру ответ нейросетки
-            #     except:
-            #         self.connections[chat_id].remove(connection)
+            fsm = FSM()
+            fsm.fsm_handle_message(chat.chat_type, chat.chat_state)
 
     async def send_websocket_message(self, chat_id: int):
         for connect in self.connections[chat_id]:
@@ -93,7 +91,7 @@ class ConnectionManager:
             self,
             websocket: WebSocket,
             chat_id: int,
-            message:  WebsocketMessageData,
+            message: WebsocketMessageData,
     ):
         message_to_send = message
         for connect in self.connections[chat_id]:
@@ -114,11 +112,13 @@ manager = ConnectionManager()
 
 
 @router.websocket('/ws/')
-async def websocket_connection(websocket: WebSocket, token: str = Query(...)):
+async def websocket_connection(websocket: WebSocket, token: str = Query(...), session: AsyncSession = Depends(get_db)):
     connection_data = await validate_token(token)
     if not connection_data:
         raise HTTPException(status_code=403, detail='incorrect_token')
     await manager.connect(websocket, connection_data.chat_id)
+    chat_repo = ChatRepo(session=session)
+    chat = await chat_repo.get_chat_by_id(connection_data.chat_id)
     try:
         while True:
             json_data = await websocket.receive_json()
@@ -126,7 +126,6 @@ async def websocket_connection(websocket: WebSocket, token: str = Query(...)):
                 message_type=json_data['message_type'],
                 data=json_data['data'],
             )
-            await manager.broadcast(websocket, websocket_message_data, connection_data.chat_id, connection_data.user_id)
+            await manager.broadcast(websocket, websocket_message_data, chat, connection_data.user_id)
     except WebSocketDisconnect:
         manager.disconnect(websocket, connection_data.chat_id)
-

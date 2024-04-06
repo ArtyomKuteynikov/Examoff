@@ -10,14 +10,14 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 class Chat(models.Model):
     # customer = models.ForeignKey(Customer, on_delete=models.CASCADE, verbose_name="Клиент")
-    chat_states = models.CharField(max_length=100, null=True, blank=True)
+    chat_state = models.CharField(max_length=100, null=True, blank=True)
 
     DIPLOMA_CHAT_TYPE = 'DIPLOMA_CHAT_TYPE'
     CHAT_TYPES = [
         (DIPLOMA_CHAT_TYPE, 'DIPLOMA_CHAT_TYPE'),
     ]
 
-    chat_types = models.CharField(
+    chat_type = models.CharField(
         max_length=50,
         choices=CHAT_TYPES,
         default=DIPLOMA_CHAT_TYPE,

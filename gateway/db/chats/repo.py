@@ -19,8 +19,8 @@ class ChatRepo:
         """Create a new Chat."""
         chat_row = await self._crud.create(
             model_data={
-                "chat_states": chat_in_creation.chat_states,
-                "chat_types": chat_in_creation.chat_types,
+                "chat_state": chat_in_creation.chat_state,
+                "chat_type": chat_in_creation.chat_type,
             }
         )
         return await self.get_chat_by_id(chat_row.id)
@@ -31,7 +31,6 @@ class ChatRepo:
             select(ChatModel).where(ChatModel.id == chat_id)
         )
         chat = row.scalars().unique().first()
-        print(chat)
         return ChatSchema.model_validate(chat)
 
 
@@ -39,7 +38,7 @@ class ChatRepo:
         """
         Получение чатов по заданным атрибутам.
 
-        :param attributes: Словарь атрибутов и их значений для фильтрации. Пример: {"chat_types": "DIPLOMA_CHAT_TYPE"}
+        :param attributes: Словарь атрибутов и их значений для фильтрации. Пример: {"chat_type": "DIPLOMA_CHAT_TYPE"}
         :return: Список чатов, соответствующих заданным атрибутам.
         """
         query = select(ChatModel)

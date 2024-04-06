@@ -16,18 +16,18 @@ class ChatSchema(BaseModel):
     id: int
         Уникальный идентификатор чата.
 
-    chat_states: Optional[str]
+    chat_state: Optional[str]
         Состояния чата, которое используется для выбора взаимодействия с пользователем.
 
-    chat_types: str
+    chat_type: str
         Тип чата, определяющий его назначение.
     """
 
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    chat_states: Optional[str] = None
-    chat_types: str
+    chat_state: Optional[str] = None
+    chat_type: str
 
 
 class ChatInCreationSchema(BaseModel):
@@ -41,12 +41,12 @@ class ChatInCreationSchema(BaseModel):
     id: int
         Уникальный идентификатор чата.
 
-    chat_states: Optional[str]
+    chat_state: Optional[str]
         Состояния чата, которое используется для выбора взаимодействия с пользователем.
 
-    chat_types: str
+    chat_type: str
         Тип чата, определяющий его назначение.
     """
     id: Optional[str] = None
-    chat_states: Optional[str] = None
-    chat_types: str = Field(default="DIPLOMA_CHAT_TYPE")
+    chat_state: Optional[str] = None
+    chat_type: str = Field(default="DIPLOMA_CHAT_TYPE")
