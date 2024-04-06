@@ -64,7 +64,7 @@ class DiplomaChatStateHandler:
         }
 
     @staticmethod
-    async def _first_message_init(chat: ChatSchema, websocket: WebSocket, connections):
+    async def _first_message_init(chat: ChatSchema, connections):
         # Отправляет сообщение по websockets.
         websocket_message = WebsocketMessageData(
             message_type=WebsocketMessageType.SYSTEM_MESSAGE,
