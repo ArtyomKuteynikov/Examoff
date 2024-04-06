@@ -39,6 +39,7 @@ class CRUD:
         )
 
         await self._session.execute(query)
+        await self._session.commit()
 
     async def delete(self, *, pkey_val: Any) -> None:
         """Delete object by primary key value."""

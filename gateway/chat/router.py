@@ -7,7 +7,7 @@ from gateway.chat.chat_states.fsm import FSM
 from gateway.config.main import SECRET_AUTH
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, Depends
 from fastapi import HTTPException
-from gateway.config.database import async_session_maker, get_db
+from gateway.config.database import async_session_maker, get_db, add_messages_to_database
 import jwt
 
 from gateway.db.chats.repo import ChatRepo
@@ -40,6 +40,7 @@ class ConnectionManager:
     def __init__(self):
         self.connections: dict = defaultdict(dict)
         self.generator = self.get_notification_generator()
+        self.fsm = FSM()
 
     async def connect(self, websocket: WebSocket, chat_id: int):
         await websocket.accept()
@@ -49,6 +50,10 @@ class ConnectionManager:
 
     def disconnect(self, websocket: WebSocket, chat_id: int):
         self.connections[chat_id].remove(websocket)
+
+    async def check_first_connection(self, chat: ChatSchema, websocket: WebSocket):
+        if chat.chat_state is None:
+            await self.fsm.init_first_message(chat, websocket, self.connections)
 
     async def get_notification_generator(self):
         while True:
@@ -76,12 +81,11 @@ class ConnectionManager:
                 text=websocket_message.data["message_text"],
                 sender_id=user_id,
             )
-            msg = await self.add_messages_to_database(message_in_creation)
+            await add_messages_to_database(message_in_creation)
             if len(self.connections[chat.id]):
                 await self.repeat_user_message_to_other_connections(websocket, chat.id, websocket_message)
 
-            fsm = FSM()
-            fsm.fsm_handle_message(chat.chat_type, chat.chat_state)
+            self.fsm.fsm_handle_message(chat.chat_type, chat.chat_state)
 
     async def send_websocket_message(self, chat_id: int):
         for connect in self.connections[chat_id]:
@@ -101,12 +105,6 @@ class ConnectionManager:
             data = websocket_message_data_to_websocket_format(message_to_send)
             await connect.send_text(data)
 
-    @staticmethod
-    async def add_messages_to_database(message: MessageInCreationSchema) -> MessageSchema:
-        async with async_session_maker() as session:
-            repo = MessageRepo(session=session)
-            return await repo.create_message(message)
-
 
 manager = ConnectionManager()
 
@@ -117,8 +115,10 @@ async def websocket_connection(websocket: WebSocket, token: str = Query(...), se
     if not connection_data:
         raise HTTPException(status_code=403, detail='incorrect_token')
     await manager.connect(websocket, connection_data.chat_id)
+
     chat_repo = ChatRepo(session=session)
     chat = await chat_repo.get_chat_by_id(connection_data.chat_id)
+    await manager.check_first_connection(chat, websocket)
     try:
         while True:
             json_data = await websocket.receive_json()

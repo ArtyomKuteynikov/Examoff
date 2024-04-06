@@ -4,6 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlmodel import SQLModel
 from gateway.config.main import DB_HOST, DB_PORT, DB_USER, DB_NAME, DB_PASS
+from gateway.db.messages.repo import MessageRepo
+from gateway.schemas.message import MessageInCreationSchema, MessageSchema
 
 # SQLALCHEMY_DATABASE_URL = config("DATABASE_URL")
 
@@ -23,3 +25,9 @@ async def init_db():
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with async_session_maker() as session:
         yield session
+
+
+async def add_messages_to_database(message: MessageInCreationSchema) -> MessageSchema:
+    async with async_session_maker() as session:
+        repo = MessageRepo(session=session)
+        return await repo.create_message(message)

@@ -33,7 +33,6 @@ class ChatRepo:
         chat = row.scalars().unique().first()
         return ChatSchema.model_validate(chat)
 
-
     async def get_chats_by_attributes(self, attributes: Dict[str, Any]) -> List[ChatSchema]:
         """
         Получение чатов по заданным атрибутам.
@@ -48,3 +47,13 @@ class ChatRepo:
         result = await self._session.execute(query)
         chats = result.scalars().all()
         return [ChatSchema.model_validate(chat) for chat in chats]
+
+    async def update_chat(self, chat: ChatSchema) -> None:
+        """Update chat state"""
+        await self._crud.update(
+            model_data={
+                "chat_state": chat.chat_state,
+                "chat_type": chat.chat_type,
+            },
+            pkey_val=chat.id,
+        )

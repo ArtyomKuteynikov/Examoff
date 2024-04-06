@@ -1,6 +1,16 @@
 """Module for enums."""
 from enum import Enum, auto
 
+from starlette.websockets import WebSocket
+
+from gateway.config.database import get_db, add_messages_to_database
+from gateway.db.chats.repo import ChatRepo
+from gateway.resources import strings
+from gateway.schemas.chat import ChatSchema
+from gateway.schemas.enums import WebsocketMessageType
+from gateway.schemas.message import MessageInCreationSchema
+from gateway.schemas.websocket_data import WebsocketMessageData, websocket_message_data_to_websocket_format
+
 
 class StrEnum(str, Enum):  # noqa: WPS600
     """Base enum."""
@@ -52,6 +62,33 @@ class DiplomaChatStateHandler:
             DiplomaChatStateEnum.ASK_ACCEPT_TEXT_STRUCTURE: self._diploma_ask_accept_text_structure,
             DiplomaChatStateEnum.DIALOG_IS_OVER: self._diploma_dialog_is_over,
         }
+
+    @staticmethod
+    async def _first_message_init(chat: ChatSchema, websocket: WebSocket, connections):
+        # Отправляет сообщение по websockets.
+        websocket_message = WebsocketMessageData(
+            message_type=WebsocketMessageType.SYSTEM_MESSAGE,
+            data={
+                "message_text": strings.DIPLOMA_WELCOME_MESSAGE
+            },
+        )
+        for connect in connections[chat.id]:
+            data = websocket_message_data_to_websocket_format(websocket_message)
+            await connect.send_text(data)
+
+        # Записывает сообщение в БД.
+        message_in_creation = MessageInCreationSchema(
+            chat_id=chat.id,
+            text=strings.DIPLOMA_WELCOME_MESSAGE,
+            sender_id=1,  # todo Change to Admin ID
+        )
+        await add_messages_to_database(message_in_creation)
+
+        # Обновляет состояние в базе.
+        async for session in get_db():
+            chat_repo = ChatRepo(session)
+            chat.chat_state = DiplomaChatStateEnum.WELCOME_MESSAGE
+            await chat_repo.update_chat(chat)
 
     def handle_message(self, chat_state: str):
         method = self.state_methods.get(chat_state)
