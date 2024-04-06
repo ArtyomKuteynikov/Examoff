@@ -10,7 +10,7 @@ from gateway.db.messages.repo import MessageRepo
 from gateway.schemas.enums import WebsocketMessageType
 from gateway.schemas.message import MessageSchema, MessageInCreationSchema
 from gateway.schemas.token import JWTTokenPayloadDataSchema
-from gateway.schemas.websocket_data import WebsocketMessageData
+from gateway.schemas.websocket_data import WebsocketMessageData, websocket_message_data_to_websocket_format
 
 router = APIRouter(
     prefix="/chat",
@@ -71,7 +71,9 @@ class ConnectionManager:
                 sender_id=user_id,
             )
             msg = await self.add_messages_to_database(message_in_creation)
-            await self.repeat_user_message_to_other_connections(websocket, chat_id, msg)
+            if len(self.connections[chat_id]):
+                await self.repeat_user_message_to_other_connections(websocket, chat_id, websocket_message)
+
             await self.send_websocket_message(chat_id)
 
             # TODO: начать выполнять обработку через ChatGPT, первым вернуть сообщение
@@ -91,12 +93,15 @@ class ConnectionManager:
             self,
             websocket: WebSocket,
             chat_id: int,
-            message: MessageSchema,
+            message:  WebsocketMessageData,
     ):
+        message_to_send = message
         for connect in self.connections[chat_id]:
             if connect == websocket:
                 continue
-            await connect.send_text(message.text)
+            message_to_send.message_type = WebsocketMessageType.USER_MESSAGE_FROM_OTHER_SOCKET
+            data = websocket_message_data_to_websocket_format(message_to_send)
+            await connect.send_text(data)
 
     @staticmethod
     async def add_messages_to_database(message: MessageInCreationSchema) -> MessageSchema:
@@ -125,10 +130,3 @@ async def websocket_connection(websocket: WebSocket, token: str = Query(...)):
     except WebSocketDisconnect:
         manager.disconnect(websocket, connection_data.chat_id)
 
-# Пример сообщения в вебсокете
-# {
-#     "message_type": "user_message",
-#     "data": {
-#         "message_text": "Hello, my name is Egor2"
-#     }
-# }
