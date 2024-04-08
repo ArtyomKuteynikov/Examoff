@@ -18,7 +18,6 @@ async_session_maker = sessionmaker(engine, class_=AsyncSession, expire_on_commit
 
 async def init_db():
     async with engine.begin() as conn:
-        # await conn.run_sync(SQLModel.metadata.drop_all)
         await conn.run_sync(SQLModel.metadata.create_all)
 
 

@@ -69,6 +69,8 @@ class MessageInCreationSchema(BaseModel):
     created_at: datetime
         Дата и время создания сообщения.
         Example: 2023-04-01T12:00:00
+
+    response_specific_state: #todo
     """
     id: Optional[int] = None
     chat_id: int
