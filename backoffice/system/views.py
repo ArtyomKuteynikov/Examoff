@@ -30,7 +30,7 @@ def is_user_exists(email, phone):
 def index(request):
     if request.user.is_authenticated:
         return redirect('panel')
-    return render(request, 'panel/index.html', {'title': 'Главная'})
+    return render(request, 'landing.html', {'title': 'Главная'})
 
 
 @login_required
