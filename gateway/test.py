@@ -18,11 +18,10 @@ def check_token(token: str):
 
 
 async def connect_to_websocket_server(room_id):
-    encoded_jwt = jwt.encode({"room_id": room_id, "role_id": 0},
-                             "cf621d6732984d0dd6608ce98825642d22fc434872f06b5890fdfec2a273b859",
+    encoded_jwt = jwt.encode({"room_id": room_id, "role_id": 0, "user_id":5},
+                             SECRET_AUTH,
                              algorithm="HS256").decode('utf-8')
-    print(check_token(encoded_jwt))
-    uri = f"ws://90.156.225.8:5000/chat/ws/{room_id}?token={encoded_jwt}"  # Replace this with the WebSocket server URI
+    uri = f"ws://127.0.0.1:8000/chat/ws/{room_id}?token={encoded_jwt}"  # Replace this with the WebSocket server URI
 
     async with websockets.connect(uri) as websocket:
         # Receive a message from the server
@@ -30,6 +29,5 @@ async def connect_to_websocket_server(room_id):
             await websocket.send('{"message": "' + input('---> ') + '"}')
             response = await websocket.recv()
             print(f"Received from {response}: {response}")
-
 
 asyncio.get_event_loop().run_until_complete(connect_to_websocket_server(28))

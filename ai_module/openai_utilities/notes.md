@@ -15,3 +15,6 @@
 У каждой модель разное ограничение по размеру максимального контекстного запроса. К примеру, у модели
 **gpt-4-0125-preview** `CONTEXT WINDOW = 128,000 tokens`. Более подробно можно ознакомится
 в [документации](https://platform.openai.com/docs/models/overview). 
+
+### Rate limits
+[Документация](https://platform.openai.com/docs/guides/rate-limits)
