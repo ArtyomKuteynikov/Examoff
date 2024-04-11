@@ -64,3 +64,20 @@ def messages_to_openai_format(messages: List[Message]) -> list[dict[str, str]]:
     ]
     """
     return [message.model_dump() for message in messages]
+
+
+def messages_to_anthropic_format(messages: List[Message]) -> list[dict[str, str]]:
+    """
+    Приводит в единый формат для запроса к Anthropic API.
+    https://docs.anthropic.com/claude/reference/messages_post
+
+    :param messages: Сообщения/Контекстный запрос.
+    :return: Список по примеру:
+    [
+        {
+            "role": "user",
+            "content": "You are a helpful, pattern-following assistant that translates corporate jargon into English.",
+        },
+    ]
+    """
+    return [message.model_dump() for message in messages]
