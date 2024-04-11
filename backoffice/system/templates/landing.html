@@ -73,6 +73,7 @@
         }
 
         #main-section {
+            padding: 10px;
             display: flex;
             justify-content: center;
             background: radial-gradient(109.34% 538.64% at -1.43% 4.03%, #12144E 0%, #06082E 18.81%, #07082C 78%, #12144E 100%);
@@ -154,6 +155,9 @@
         p {
             font-size: 14px !important;
         }
+        .row {
+            margin: 0;
+        }
 
     </style>
     {% endblock %}
@@ -191,7 +195,7 @@
                 <nav class="header-nav  ms-auto d-none d-lg-block d-md-block d-xl-block">
                     <a style="color: #444444;" href="#contacts"><h6>Контакты</h6></a>
                 </nav>
-                <nav class="header-nav ms-auto">
+                <nav class="header-nav ms-auto d-none d-lg-block d-md-block d-xl-block">
                     <a class="btn btn-blue" id="loginButton" href="/signup">Создать аккаунт</a>
                     <a class="btn btn-white" id="signupButton" href="/login" style="color: #000 !important;">Войти</a>
                 </nav><!-- End Icons Navigation -->
@@ -199,22 +203,32 @@
             </header><!-- End Header -->
             <div class="row">
                 <div class="col-md-7" style="color: #fff !important">
-                    <h1>
+                    <h1 class="d-none d-lg-block d-md-block d-xl-block">
                         Решайте задачи<br>по учебе <b>за 1 минуту</b><br>с помощью ChatGPT
                     </h1>
+
+                    <h2 class="d-lg-none d-md-none d-xl-none">
+                        Решайте задачи<br>по учебе <b>за 1 минуту</b><br>с помощью ChatGPT
+                    </h2>
 
                     <p>
                         Поможем справиться с любой задачей - от выполнения домашних заданий до успешной защиты диплома
                     </p>
+
+                    <div class="d-lg-none d-md-none d-xl-none">
+                        <img src="{% static 'video.png' %}">
+                        <a class="btn btn-blue btn-big" href="/signup" style="margin: 10px 0;">Создать аккаунт</a>
+                        <a class="btn btn-white btn-big" href="/login" style="margin: 10px 0;color: #000 !important;">Войти</a>
+                    </div>
                     <div class="row" id="m-0">
-                        <div style="display: flex;" class="col-md-6">
+                        <div style="display: flex;margin: 10px 0;" class="col-md-6">
                             <img src="{% static 'help.png' %}" style="margin-right: 10px">
                             <div style="margin: auto 0;">
                                 <h6>Помогаем онлайн</h6>
                                 <p>Прямо на экзаменах и защитах</p>
                             </div>
                         </div>
-                        <div style="display: flex;" class="col-md-6">
+                        <div style="display: flex;margin: 10px 0;" class="col-md-6">
                             <img src="{% static 'happy.png' %}" style="margin-right: 10px">
                             <div style="margin: auto 0;">
                                 <h6>99% решенных задач</h6>
@@ -223,32 +237,44 @@
                         </div>
                     </div>
 
-                    <div class="row" style="margin: 50px 0;">
-                        <button class="btn btn-blue btn-big col-md-5">Загрузить фото</button>
-                        <div class="col-md-1"></div>
-                        <button class="btn btn-white btn-big col-md-5">Включить запись</button>
+                    <div class="row d-none d-lg-block d-md-block d-xl-block">
+                        <div style="margin: 50px 0;display: flex !important;">
+                            <button class="btn btn-blue btn-big col-md-5">Загрузить фото</button>
+                            <div class="col-md-1"></div>
+                            <button class="btn btn-white btn-big col-md-5">Включить запись</button>
+                        </div>
                     </div>
 
-                    <div>
+                    <div class="d-none d-lg-block d-md-block d-xl-block">
                         <img src="{% static 'marks.png' %}">
                     </div>
 
                 </div>
-                <div class="col-md-5">
+                <div class="col-md-5 d-none d-lg-block d-md-block d-xl-block">
 
                     <img style="z-index: 2;position: absolute;bottom: 10px;" src="{% static 'video.png' %}">
-                    <img style="z-index: 1;scale: 1.4;position: absolute;top: 150px;transform: rotate(3deg);" src="{% static 'laptop.png' %}">
+                    <img style="z-index: 1;scale: 1.4;position: absolute;top: 150px;transform: rotate(3deg);"
+                         src="{% static 'laptop.png' %}">
                 </div>
             </div>
         </div>
 
     </section>
-    <section style="text-align: center;padding: 50px;">
+    <section style="text-align: center;padding: 50px;" class="d-none d-lg-block d-md-block d-xl-block">
         <img src="{% static 'content.png' %}" style="max-width: 1000px;">
+    </section>
+    <section class="d-lg-none d-md-none d-xl-none" style="text-align: center;">
+        <img src="{% static 'categories-mobile.png' %}" style="margin: 20px 0;">
+        <img src="{% static 'video-1-mobile.png' %}" style="width: 100%;">
+        <img src="{% static 'video-2-mobile.png' %}" style="width: 100%;">
+        <img src="{% static 'review-mobile.png' %}">
+        <img src="{% static 'cards-mobile.png' %}" style="margin: 20px 0;">
+        <img src="{% static 'try-mobile.png' %}" style="width: 100%;">
     </section>
 
     <footer style="background-color: #3D3D3D;">
-        <img src="{% static 'footer.png' %}">
+        <img src="{% static 'footer.png' %}" class="d-none d-lg-block d-md-block d-xl-block">
+        <img src="{% static 'footer-mobile.png' %}" class="d-lg-none d-md-none d-xl-none" style="width: 100%">
     </footer>
 </section>
 
