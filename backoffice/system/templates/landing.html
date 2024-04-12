@@ -227,6 +227,7 @@
         .slider {
             display: flex;
             overflow: hidden;
+            -webkit-overflow-scrolling: touch;
         }
 
     </style>
@@ -650,23 +651,51 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        const prevBtn = document.querySelector(".prev-btn");
-        const nextBtn = document.querySelector(".next-btn");
-        const slider = document.querySelector(".slider");
+    const prevBtn = document.querySelector(".prev-btn");
+    const nextBtn = document.querySelector(".next-btn");
+    const slider = document.querySelector(".slider");
+    let startX, startY, dist, threshold = 150; // Пороговое значение для определения жеста
 
-        prevBtn.addEventListener("click", function () {
-            slider.scrollLeft -= slider.offsetWidth;
-        });
-
-        nextBtn.addEventListener("click", function () {
-            slider.scrollLeft += slider.offsetWidth;
-        });
-
-        slider.addEventListener("wheel", function (event) {
-            event.preventDefault();
-            slider.scrollLeft += event.deltaY;
-        });
+    prevBtn.addEventListener("click", function () {
+        slider.scrollLeft -= slider.offsetWidth;
     });
+
+    nextBtn.addEventListener("click", function () {
+        slider.scrollLeft += slider.offsetWidth;
+    });
+
+    slider.addEventListener("wheel", function (event) {
+        event.preventDefault();
+        slider.scrollLeft += event.deltaY;
+    });
+
+    slider.addEventListener("touchstart", function (event) {
+        const touch = event.touches[0];
+        startX = touch.clientX;
+        startY = touch.clientY;
+    });
+
+    slider.addEventListener("touchmove", function (event) {
+        if (!startX || !startY) return;
+
+        const touch = event.touches[0];
+        const deltaX = startX - touch.clientX;
+        const deltaY = startY - touch.clientY;
+
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+            event.preventDefault(); // Предотвращаем прокрутку страницы по вертикали
+            slider.scrollLeft += deltaX;
+        }
+
+        startX = touch.clientX;
+        startY = touch.clientY;
+    });
+
+    slider.addEventListener("touchend", function () {
+        startX = null;
+        startY = null;
+    });
+});
 </script>
 </body>
 
