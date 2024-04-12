@@ -230,6 +230,17 @@
             -webkit-overflow-scrolling: touch;
         }
 
+        .slider-mobile {
+            display: flex;
+            overflow: scroll;
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
+        .slider-mobile::-webkit-scrollbar {
+          display: none;
+        }
+
     </style>
     {% endblock %}
 
@@ -493,8 +504,8 @@
                     <p style="color: #475467;">Популярные отзывы из Telegram.</p>
                 </div>
             </div>
-            <div class="slider">
-                <div class="card-small active">
+            <div class="slider-mobile">
+                <div class="card-small">
                     <h5>«Сверхбыстрые ответы»</h5>
                     <p style="color: #475467;">Помогает мне решать домашние работы по всем предметам. Это сильно помогает мне не терять интерес к обучению, делая раньше глупые задачи самостоятельно.</p>
                     <hr>
@@ -651,51 +662,52 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-    const prevBtn = document.querySelector(".prev-btn");
-    const nextBtn = document.querySelector(".next-btn");
-    const slider = document.querySelector(".slider");
-    let startX, startY, dist, threshold = 150; // Пороговое значение для определения жеста
+        const prevBtn = document.querySelector(".prev-btn");
+        const nextBtn = document.querySelector(".next-btn");
+        const slider = document.querySelector(".slider");
+        const slider_mobile = document.querySelector(".slider-mobile");
+        let startX, startY, dist, threshold = 150; // Пороговое значение для определения жеста
 
-    prevBtn.addEventListener("click", function () {
-        slider.scrollLeft -= slider.offsetWidth;
+        prevBtn.addEventListener("click", function () {
+            slider.scrollLeft -= 200;
+        });
+
+        nextBtn.addEventListener("click", function () {
+            slider.scrollLeft += 200;
+        });
+
+        slider.addEventListener("wheel", function (event) {
+            event.preventDefault();
+            slider.scrollLeft += event.deltaY;
+        });
+
+        slider.addEventListener("touchstart", function (event) {
+            const touch = event.touches[0];
+            startX = touch.clientX;
+            startY = touch.clientY;
+        });
+
+        slider.addEventListener("touchmove", function (event) {
+            if (!startX || !startY) return;
+
+            const touch = event.touches[0];
+            const deltaX = startX - touch.clientX;
+            const deltaY = startY - touch.clientY;
+
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                event.preventDefault(); // Предотвращаем прокрутку страницы по вертикали
+                slider_mobile.scrollLeft += deltaX;
+            }
+
+            startX = touch.clientX;
+            startY = touch.clientY;
+        });
+
+        slider.addEventListener("touchend", function () {
+            startX = null;
+            startY = null;
+        });
     });
-
-    nextBtn.addEventListener("click", function () {
-        slider.scrollLeft += slider.offsetWidth;
-    });
-
-    slider.addEventListener("wheel", function (event) {
-        event.preventDefault();
-        slider.scrollLeft += event.deltaY;
-    });
-
-    slider.addEventListener("touchstart", function (event) {
-        const touch = event.touches[0];
-        startX = touch.clientX;
-        startY = touch.clientY;
-    });
-
-    slider.addEventListener("touchmove", function (event) {
-        if (!startX || !startY) return;
-
-        const touch = event.touches[0];
-        const deltaX = startX - touch.clientX;
-        const deltaY = startY - touch.clientY;
-
-        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-            event.preventDefault(); // Предотвращаем прокрутку страницы по вертикали
-            slider.scrollLeft += deltaX;
-        }
-
-        startX = touch.clientX;
-        startY = touch.clientY;
-    });
-
-    slider.addEventListener("touchend", function () {
-        startX = null;
-        startY = null;
-    });
-});
 </script>
 </body>
 
