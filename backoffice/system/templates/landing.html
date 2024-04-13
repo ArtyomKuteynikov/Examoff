@@ -73,6 +73,7 @@
         }
 
         #main-section {
+            padding: 10px;
             display: flex;
             justify-content: center;
             background: radial-gradient(109.34% 538.64% at -1.43% 4.03%, #12144E 0%, #06082E 18.81%, #07082C 78%, #12144E 100%);
@@ -89,7 +90,7 @@
 
         #main-section h1,#main-section  h2,#main-section  h3,#main-section  h4,#main-section  h5,#main-section  h6,#main-section  p,#main-section a {
             color: #fff !important;
-            margin: 50px 0;
+            margin: 40px 0;
         }
         #m-0 h1,#main-section  h2,#m-0  h3,#main-section  h4,#m-0  h5,#m-0  h6,#m-0  p,#m-0 a {
             color: #fff !important;
@@ -154,6 +155,91 @@
         p {
             font-size: 14px !important;
         }
+        .row {
+            margin: 0;
+        }
+
+        .card {
+            margin: 0 auto 30px;
+            border-radius: 10px;
+            box-shadow: none;
+            padding: 40px;
+            max-width: 1000px;
+        }
+
+        .card-small {
+            border-radius: 10px;
+            box-shadow: none;
+            padding: 20px;
+            min-width: 404px;
+            margin: 0 20px 0 0;
+            background-color: #F8F8F8;
+            text-align: left;
+            transition: transform 0.5s ease;
+            float: left; /* Добавляет слайды в одну строку */
+        }
+
+        .active {
+          transform: translateX(0);
+        }
+
+        .card-dark {
+            text-align: left;
+            color: #FFFFFF;
+            background: radial-gradient(109.34% 538.64% at -1.43% 4.03%, #12144E 0%, #06082E 18.81%, #07082C 78%, #12144E 100%);
+        }
+
+        .card-light {
+            text-align: left;
+            color: #000000;
+            background-color: #F8F8F8;
+        }
+
+        .card-blue {
+            color: #FFFFFF;
+            background: linear-gradient(180deg, #1976D2 0%, #2794FF 100%);
+        }
+
+        .btn-gray {
+            background: #9F9F9F;
+            color: white;
+            margin: 5px;
+        }
+        .btn-active {
+            background: linear-gradient(180deg, #1976D2 0%, #2794FF 100%);
+            color: white;
+            margin: 5px;
+        }
+
+        .btn-gray:hover {
+            opacity: 0.5;
+            background: #9F9F9F;
+            color: white;
+            margin: 5px;
+        }
+        .btn-active:hover {
+            opacity: 0.5;
+            background: linear-gradient(180deg, #1976D2 0%, #2794FF 100%);
+            color: white;
+            margin: 5px;
+        }
+
+        .slider {
+            display: flex;
+            overflow: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .slider-mobile {
+            display: flex;
+            overflow: scroll;
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
+        .slider-mobile::-webkit-scrollbar {
+          display: none;
+        }
 
     </style>
     {% endblock %}
@@ -191,31 +277,41 @@
                 <nav class="header-nav  ms-auto d-none d-lg-block d-md-block d-xl-block">
                     <a style="color: #444444;" href="#contacts"><h6>Контакты</h6></a>
                 </nav>
-                <nav class="header-nav ms-auto">
+                <nav class="header-nav ms-auto d-none d-lg-block d-md-block d-xl-block">
                     <a class="btn btn-blue" id="loginButton" href="/signup">Создать аккаунт</a>
                     <a class="btn btn-white" id="signupButton" href="/login" style="color: #000 !important;">Войти</a>
                 </nav><!-- End Icons Navigation -->
 
             </header><!-- End Header -->
             <div class="row">
-                <div class="col-md-7" style="color: #fff !important">
-                    <h1>
+                <div class="col-lg-7" style="color: #fff !important">
+                    <h1 class="d-none d-lg-block d-md-block d-xl-block">
                         Решайте задачи<br>по учебе <b>за 1 минуту</b><br>с помощью ChatGPT
                     </h1>
+
+                    <h2 class="d-lg-none d-md-none d-xl-none">
+                        Решайте задачи<br>по учебе <b>за 1 минуту</b><br>с помощью ChatGPT
+                    </h2>
 
                     <p>
                         Поможем справиться с любой задачей - от выполнения домашних заданий до успешной защиты диплома
                     </p>
+
+                    <div class="d-lg-none d-md-none d-xl-none">
+                        <img src="{% static 'video-main.svg' %}"><br>
+                        <a class="btn btn-blue btn-big" href="/signup" style="margin: 10px 0;">Создать аккаунт</a>
+                        <a class="btn btn-white btn-big" href="/login" style="margin: 10px 0;color: #000 !important;">Войти</a>
+                    </div>
                     <div class="row" id="m-0">
-                        <div style="display: flex;" class="col-md-6">
-                            <img src="{% static 'help.png' %}" style="margin-right: 10px">
+                        <div style="display: flex;margin: 10px 0;" class="col-md-6">
+                            <img src="{% static 'help.svg' %}" style="margin-right: 10px">
                             <div style="margin: auto 0;">
                                 <h6>Помогаем онлайн</h6>
                                 <p>Прямо на экзаменах и защитах</p>
                             </div>
                         </div>
-                        <div style="display: flex;" class="col-md-6">
-                            <img src="{% static 'happy.png' %}" style="margin-right: 10px">
+                        <div style="display: flex;margin: 10px 0;" class="col-md-6">
+                            <img src="{% static 'happy.svg' %}" style="margin-right: 10px">
                             <div style="margin: auto 0;">
                                 <h6>99% решенных задач</h6>
                                 <p>От диплома до эссе</p>
@@ -223,32 +319,285 @@
                         </div>
                     </div>
 
-                    <div class="row" style="margin: 50px 0;">
-                        <button class="btn btn-blue btn-big col-md-5">Загрузить фото</button>
-                        <div class="col-md-1"></div>
-                        <button class="btn btn-white btn-big col-md-5">Включить запись</button>
+                    <div class="row d-none d-lg-block d-md-block d-xl-block">
+                        <div style="margin: 50px 0;display: flex !important;">
+                            <button class="btn btn-blue btn-big col-md-5">Загрузить фото</button>
+                            <div class="col-md-1"></div>
+                            <button class="btn btn-white btn-big col-md-5">Включить запись</button>
+                        </div>
                     </div>
 
-                    <div>
-                        <img src="{% static 'marks.png' %}">
+                    <div class="d-none d-lg-block d-md-block d-xl-block">
+                        <img src="{% static 'marks.svg' %}">
                     </div>
 
                 </div>
-                <div class="col-md-5">
+                <div class="col-md-5 d-none d-lg-block d-xl-block">
 
-                    <img style="z-index: 2;position: absolute;bottom: 10px;" src="{% static 'video.png' %}">
-                    <img style="z-index: 1;scale: 1.4;position: absolute;top: 150px;transform: rotate(3deg);" src="{% static 'laptop.png' %}">
+                    <img style="z-index: 2;position: absolute;bottom: 10px;" src="{% static 'video-main.svg' %}">
+                    <img style="z-index: 1;scale: 1.4;position: absolute;top: 150px;transform: rotate(3deg);"
+                         src="{% static 'laptop.svg' %}">
                 </div>
             </div>
         </div>
 
     </section>
-    <section style="text-align: center;padding: 50px;">
-        <img src="{% static 'content.png' %}" style="max-width: 1000px;">
+    <section style="text-align: center;padding: 50px;background: white;" class="d-none d-lg-block d-xl-block">
+        <img src="{% static 'cards.svg' %}" style="max-width: 1000px;">
+        <img src="{% static 'for_studying.svg' %}" style="max-width: 1000px; margin: 20px 0;">
+        <div class="card card-dark">
+            <div class="row">
+                <div class="col-md-7">
+                    <h2>Загрузи свою работу и нейросеть найдет для нее решения</h2>
+                    <p>Прикрепите в чате фото билета или файл с задачей, Examoff проанализирует их и моментально даст необходимый вам ответ!</p>
+                    <img src="{% static 'list-1.svg' %}">
+                </div>
+                <div class="col-md-5">
+                    <img src="{% static 'video.svg' %}">
+                </div>
+            </div>
+        </div>
+        <div class="card card-light">
+            <div class="row">
+                <div class="col-md-5">
+                    <img src="{% static 'video.svg' %}">
+                </div>
+                <div class="col-md-7">
+                    <h2>Просто включи запись и получай ответы</h2>
+                    <p style="color: #475467;">Examoff может в прямом эфире распознавать голоса, обрабатывать вопросы и давать на них ответ!</p>
+                    <img src="{% static 'list-2.svg' %}">
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div style="display: flex;justify-content: space-between;">
+                <div style="text-align: left">
+                    <h2>Что говорят о Examoff</h2>
+                    <p style="color: #475467;">Популярные отзывы из Telegram.</p>
+                </div>
+                <div style="margin: auto 0;">
+                    <div style="display: flex;">
+                        <button class="btn btn-gray prev-btn">
+                            <i class="bi bi-caret-left-fill"></i>
+                        </button>
+                        <button class="btn btn-active next-btn">
+                            <i class="bi bi-caret-right-fill"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="slider">
+                <div class="card-small active">
+                    <h5>«Сверхбыстрые ответы»</h5>
+                    <p style="color: #475467;">Помогает мне решать домашние работы по всем предметам. Это сильно помогает мне не терять интерес к обучению, делая раньше глупые задачи самостоятельно.</p>
+                    <hr>
+                    <div style="display: flex;">
+                        <div style="margin: 0 10px;">
+                            <img src="{% static 'nat.svg' %}">
+                        </div>
+                        <div>
+                            <h6>Наталья Рубцова</h6>
+                            <img src="{% static 'tg.svg' %}">
+                        </div>
+                    </div>
+                </div>
+                <div class="card-small">
+                    <h5>«Сверхбыстрые ответы»</h5>
+                    <p style="color: #475467;">Помогает мне решать домашние работы по всем предметам. Это сильно помогает мне не терять интерес к обучению, делая раньше глупые задачи самостоятельно.</p>
+                    <hr>
+                    <div style="display: flex;">
+                        <div style="margin: 0 10px;">
+                            <img src="{% static 'nat.svg' %}">
+                        </div>
+                        <div>
+                            <h6>Наталья Рубцова</h6>
+                            <img src="{% static 'tg.svg' %}">
+                        </div>
+                    </div>
+                </div>
+                <div class="card-small">
+                    <h5>«Сверхбыстрые ответы»</h5>
+                    <p style="color: #475467;">Помогает мне решать домашние работы по всем предметам. Это сильно помогает мне не терять интерес к обучению, делая раньше глупые задачи самостоятельно.</p>
+                    <hr>
+                    <div style="display: flex;">
+                        <div style="margin: 0 10px;">
+                            <img src="{% static 'nat.svg' %}">
+                        </div>
+                        <div>
+                            <h6>Наталья Рубцова</h6>
+                            <img src="{% static 'tg.svg' %}">
+                        </div>
+                    </div>
+                </div>
+                <div class="card-small">
+                    <h5>«Сверхбыстрые ответы»</h5>
+                    <p style="color: #475467;">Помогает мне решать домашние работы по всем предметам. Это сильно помогает мне не терять интерес к обучению, делая раньше глупые задачи самостоятельно.</p>
+                    <hr>
+                    <div style="display: flex;">
+                        <div style="margin: 0 10px;">
+                            <img src="{% static 'nat.svg' %}">
+                        </div>
+                        <div>
+                            <h6>Наталья Рубцова</h6>
+                            <img src="{% static 'tg.svg' %}">
+                        </div>
+                    </div>
+                </div>
+                <div class="card-small">
+                    <h5>«Сверхбыстрые ответы»</h5>
+                    <p style="color: #475467;">Помогает мне решать домашние работы по всем предметам. Это сильно помогает мне не терять интерес к обучению, делая раньше глупые задачи самостоятельно.</p>
+                    <hr>
+                    <div style="display: flex;">
+                        <div style="margin: 0 10px;">
+                            <img src="{% static 'nat.svg' %}">
+                        </div>
+                        <div>
+                            <h6>Наталья Рубцова</h6>
+                            <img src="{% static 'tg.svg' %}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card card-blue">
+            <div style="display: flex;justify-content: space-between;">
+                <img src="{% static 'flex.svg' %}">
+                <h4 style="margin: auto;">Попробуйте все возможности всего за 799 рублей!</h4>
+                <button class="btn btn-white btn-big">Создать аккаунт</button>
+            </div>
+        </div>
+    </section>
+    <section class="d-lg-none d-md-none d-xl-none" style="text-align: center;">
+        <img src="{% static 'categories-mobile.svg' %}" style="margin: 20px 0;">
+        <div class="card-dark" style="padding: 40px 20px;">
+            <div class="row">
+                <div class="col-md-7">
+                    <h2>Загрузи свою работу и нейросеть найдет для нее решения</h2>
+                    <br>
+                    <p>Прикрепите в чате фото билета или файл с задачей, Examoff проанализирует их и моментально даст необходимый вам ответ!</p>
+                    <br>
+                    <img src="{% static 'list-1.svg' %}">
+                </div>
+                <div class="col-md-5" style="margin: 20px 0;">
+                    <img src="{% static 'video.svg' %}">
+                </div>
+            </div>
+        </div>
+        <div class="card-light" style="padding: 40px 20px;">
+            <div class="row">
+                <div class="col-md-7">
+                    <h2>Просто включи запись и получай ответы</h2>
+                    <br>
+                    <p style="color: #475467;">Examoff может в прямом эфире распознавать голоса, обрабатывать вопросы и давать на них ответ!</p>
+                    <br>
+                    <img src="{% static 'list-2.svg' %}">
+                </div>
+                <div class="col-md-5" style="margin: 20px 0;">
+                    <img src="{% static 'video.svg' %}">
+                </div>
+            </div>
+        </div>
+        <div style="margin: 0 0 0 40px;">
+            <div style="display: flex;justify-content: space-between;">
+                <div style="text-align: left">
+                    <h2>Что говорят о Examoff</h2>
+                    <p style="color: #475467;">Популярные отзывы из Telegram.</p>
+                </div>
+            </div>
+            <div class="slider-mobile">
+                <div class="card-small">
+                    <h5>«Сверхбыстрые ответы»</h5>
+                    <p style="color: #475467;">Помогает мне решать домашние работы по всем предметам. Это сильно помогает мне не терять интерес к обучению, делая раньше глупые задачи самостоятельно.</p>
+                    <hr>
+                    <div style="display: flex;">
+                        <div style="margin: 0 10px;">
+                            <img src="{% static 'nat.svg' %}">
+                        </div>
+                        <div>
+                            <h6>Наталья Рубцова</h6>
+                            <img src="{% static 'tg.svg' %}">
+                        </div>
+                    </div>
+                </div>
+                <div class="card-small">
+                    <h5>«Сверхбыстрые ответы»</h5>
+                    <p style="color: #475467;">Помогает мне решать домашние работы по всем предметам. Это сильно помогает мне не терять интерес к обучению, делая раньше глупые задачи самостоятельно.</p>
+                    <hr>
+                    <div style="display: flex;">
+                        <div style="margin: 0 10px;">
+                            <img src="{% static 'nat.svg' %}">
+                        </div>
+                        <div>
+                            <h6>Наталья Рубцова</h6>
+                            <img src="{% static 'tg.svg' %}">
+                        </div>
+                    </div>
+                </div>
+                <div class="card-small">
+                    <h5>«Сверхбыстрые ответы»</h5>
+                    <p style="color: #475467;">Помогает мне решать домашние работы по всем предметам. Это сильно помогает мне не терять интерес к обучению, делая раньше глупые задачи самостоятельно.</p>
+                    <hr>
+                    <div style="display: flex;">
+                        <div style="margin: 0 10px;">
+                            <img src="{% static 'nat.svg' %}">
+                        </div>
+                        <div>
+                            <h6>Наталья Рубцова</h6>
+                            <img src="{% static 'tg.svg' %}">
+                        </div>
+                    </div>
+                </div>
+                <div class="card-small">
+                    <h5>«Сверхбыстрые ответы»</h5>
+                    <p style="color: #475467;">Помогает мне решать домашние работы по всем предметам. Это сильно помогает мне не терять интерес к обучению, делая раньше глупые задачи самостоятельно.</p>
+                    <hr>
+                    <div style="display: flex;">
+                        <div style="margin: 0 10px;">
+                            <img src="{% static 'nat.svg' %}">
+                        </div>
+                        <div>
+                            <h6>Наталья Рубцова</h6>
+                            <img src="{% static 'tg.svg' %}">
+                        </div>
+                    </div>
+                </div>
+                <div class="card-small">
+                    <h5>«Сверхбыстрые ответы»</h5>
+                    <p style="color: #475467;">Помогает мне решать домашние работы по всем предметам. Это сильно помогает мне не терять интерес к обучению, делая раньше глупые задачи самостоятельно.</p>
+                    <hr>
+                    <div style="display: flex;">
+                        <div style="margin: 0 10px;">
+                            <img src="{% static 'nat.svg' %}">
+                        </div>
+                        <div>
+                            <h6>Наталья Рубцова</h6>
+                            <img src="{% static 'tg.svg' %}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <img src="{% static 'cards-mobile.svg' %}" style="margin: 20px 0;">
+        <div class="card-blue">
+            <div>
+                <br>
+                <br>
+                <img src="{% static 'flex.svg' %}">
+                <br>
+                <br>
+                <h4 style="margin: auto;">Попробуйте все возможности всего за 799 рублей!</h4>
+                <br>
+                <button class="btn btn-white btn-big">Создать аккаунт</button>
+                <br>
+                <br>
+            </div>
+        </div>
     </section>
 
     <footer style="background-color: #3D3D3D;">
-        <img src="{% static 'footer.png' %}">
+        <img src="{% static 'footer.svg' %}" class="d-none d-lg-block d-md-block d-xl-block">
+        <img src="{% static 'footer-mobile.svg' %}" class="d-lg-none d-md-none d-xl-none" style="width: 100%">
     </footer>
 </section>
 
@@ -309,6 +658,56 @@
         $('#content').load(url);
         history.pushState({}, '', url.replace('/light', ''));
     }
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const prevBtn = document.querySelector(".prev-btn");
+        const nextBtn = document.querySelector(".next-btn");
+        const slider = document.querySelector(".slider");
+        const slider_mobile = document.querySelector(".slider-mobile");
+        let startX, startY, dist, threshold = 150; // Пороговое значение для определения жеста
+
+        prevBtn.addEventListener("click", function () {
+            slider.scrollLeft -= 200;
+        });
+
+        nextBtn.addEventListener("click", function () {
+            slider.scrollLeft += 200;
+        });
+
+        slider.addEventListener("wheel", function (event) {
+            event.preventDefault();
+            slider.scrollLeft += event.deltaY;
+        });
+
+        slider.addEventListener("touchstart", function (event) {
+            const touch = event.touches[0];
+            startX = touch.clientX;
+            startY = touch.clientY;
+        });
+
+        slider.addEventListener("touchmove", function (event) {
+            if (!startX || !startY) return;
+
+            const touch = event.touches[0];
+            const deltaX = startX - touch.clientX;
+            const deltaY = startY - touch.clientY;
+
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                event.preventDefault(); // Предотвращаем прокрутку страницы по вертикали
+                slider_mobile.scrollLeft += deltaX;
+            }
+
+            startX = touch.clientX;
+            startY = touch.clientY;
+        });
+
+        slider.addEventListener("touchend", function () {
+            startX = null;
+            startY = null;
+        });
+    });
 </script>
 </body>
 
