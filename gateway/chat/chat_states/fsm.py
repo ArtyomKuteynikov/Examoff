@@ -3,6 +3,7 @@ from gateway.chat.chat_states.control_work import ControlWorkChatStateHandler
 from gateway.chat.chat_states.diploma import DiplomaChatStateHandler
 from gateway.chat.chat_states.essay import EssayChatStateHandler
 from gateway.chat.chat_states.full_report import FullReportChatStateHandler
+from gateway.chat.chat_states.homework import HomeworkChatStateHandler
 from gateway.chat.chat_states.report import ReportChatStateHandler
 from gateway.chat.chat_states.writing import WritingChatStateHandler
 from gateway.schemas.chat import ChatSchema
@@ -17,6 +18,7 @@ class FSM(
     WritingChatStateHandler,
     ReportChatStateHandler,
     FullReportChatStateHandler,
+    HomeworkChatStateHandler,
 ):
     """
     Конечный автомат (Finite State Machine).
@@ -42,6 +44,8 @@ class FSM(
             await ReportChatStateHandler.handle_message(self, chat, message, connections)
         elif chat.chat_type == ChatType.FULL_REPORT_CHAT_TYPE:
             await FullReportChatStateHandler.handle_message(self, chat, message, connections)
+        elif chat.chat_type == ChatType.HOMEWORK_CHAT_TYPE:
+            await FullReportChatStateHandler.handle_message(self, chat, message, connections)
 
     async def init_first_message(self, chat: ChatSchema, connections) -> None:
         """
@@ -58,4 +62,6 @@ class FSM(
         elif chat.chat_type == ChatType.REPORT_CHAT_TYPE:
             await ReportChatStateHandler._first_message_init(chat, connections)
         elif chat.chat_type == ChatType.FULL_REPORT_CHAT_TYPE:
+            await FullReportChatStateHandler._first_message_init(chat, connections)
+        elif chat.chat_type == ChatType.HOMEWORK_CHAT_TYPE:
             await FullReportChatStateHandler._first_message_init(chat, connections)

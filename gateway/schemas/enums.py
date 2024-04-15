@@ -33,6 +33,7 @@ class ChatType(StrEnum):
     WRITING_CHAT_TYPE = 'WRITING_CHAT_TYPE'
     REPORT_CHAT_TYPE = 'REPORT_CHAT_TYPE'
     FULL_REPORT_CHAT_TYPE = 'FULL_REPORT_CHAT_TYPE'
+    HOMEWORK_CHAT_TYPE = 'HOMEWORK_CHAT_TYPE'
 
 
 class DiplomaChatStateEnum(StrEnum):
@@ -340,7 +341,7 @@ class FullReportChatStateEnum(StrEnum):
     DIALOG_IS_OVER = "dialog_is_over"
 
 
-class HomeWorkChatStateEnum(StrEnum):
+class HomeworkChatStateEnum(StrEnum):
     """
     Состояние диалога при заказе домашнего задания.
     ===============================================
