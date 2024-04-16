@@ -1,6 +1,7 @@
 """Text and templates for messages."""
 
 # Messages
+
 ## Diploma States
 DIPLOMA_WELCOME_MESSAGE = (
     "Привет! Я Examoff, твой помощник по учебе. Готов помочь с написанием дипломных работ и не только. Я могу собрать "
@@ -32,6 +33,179 @@ DIPLOMA_ASK_ANY_INFORMATION = (
 DIPLOMA_ASK_ACCEPT_PLAN = (
     "Отлично! Я получил все необходимые данные для написания дипломной работы. Вы можете ознакомиться с планом, "
     "который я подготовил в текстовом формате. После подтверждения я подготовлю для вас вашу работу в формате .docx."
+)
+
+## Control Work States
+CONTROL_WORK_WELCOME_MESSAGE = (
+    "CONTROL_WORK_WELCOME_MESSAGE"
+)
+CONTROL_WORK_ASK_THEME = (
+    "CONTROL_WORK_ASK_THEME"
+)
+CONTROL_WORK_ASK_WORK_SIZE = (
+    "CONTROL_WORK_ASK_WORK_SIZE"
+)
+CONTROL_WORK_ASK_OTHER_REQUIREMENTS = (
+    "CONTROL_WORK_ASK_OTHER_REQUIREMENTS"
+)
+CONTROL_WORK_ASK_INFORMATION_SOURCE = (
+    "CONTROL_WORK_ASK_INFORMATION_SOURCE"
+)
+CONTROL_WORK_ASK_ANY_INFORMATION = (
+    "CONTROL_WORK_ASK_ANY_INFORMATION"
+)
+CONTROL_WORK_ASK_ACCEPT_PLAN = (
+    "CONTROL_WORK_ASK_ACCEPT_PLAN"
+)
+
+## Essay States
+ESSAY_WELCOME_MESSAGE = (
+    "ESSAY_WELCOME_MESSAGE"
+)
+ESSAY_ASK_THEME = (
+    "ESSAY_ASK_THEME"
+)
+ESSAY_ASK_WORK_SIZE = (
+    "ESSAY_ASK_WORK_SIZE"
+)
+ESSAY_ASK_OTHER_REQUIREMENTS = (
+    "ESSAY_ASK_OTHER_REQUIREMENTS"
+)
+ESSAY_ASK_INFORMATION_SOURCE = (
+    "ESSAY_ASK_INFORMATION_SOURCE"
+)
+ESSAY_ASK_ASPECTS_PROBLEM = (
+    "ESSAY_ASK_ASPECTS_PROBLEM"
+)
+ESSAY_ASK_OPINION = (
+    "ESSAY_ASK_OPINION"
+)
+ESSAY_ASK_WRITING_STYLE = (
+    "ESSAY_ASK_WRITING_STYLE"
+)
+ESSAY_ASK_ANY_INFORMATION = (
+    "ESSAY_ASK_ANY_INFORMATION"
+)
+ESSAY_ASK_ACCEPT_PLAN = (
+    "ESSAY_ASK_ACCEPT_PLAN"
+)
+ESSAY_ASK_ACCEPT_TEXT_STRUCTURE = (
+    "ESSAY_ASK_ACCEPT_TEXT_STRUCTURE"
+)
+
+## Writing States
+WRITING_WELCOME_MESSAGE = (
+    "WRITING_WELCOME_MESSAGE"
+)
+WRITING_ASK_THEME = (
+    "WRITING_ASK_THEME"
+)
+WRITING_ASK_WORK_SIZE = (
+    "WRITING_ASK_WORK_SIZE"
+)
+WRITING_ASK_ASPECTS_ANALYSIS = (
+    "WRITING_ASK_ASPECTS_ANALYSIS"
+)
+WRITING_ASK_ANALYSIS_TYPE = (
+    "WRITING_ASK_ANALYSIS_TYPE"
+)
+WRITING_ASK_WRITING_STYLE = (
+    "WRITING_ASK_WRITING_STYLE"
+)
+WRITING_ASK_ANY_INFORMATION = (
+    "WRITING_ASK_ANY_INFORMATION"
+)
+WRITING_ASK_ACCEPT_PLAN = (
+    "WRITING_ASK_ACCEPT_PLAN"
+)
+WRITING_ASK_ACCEPT_TEXT_STRUCTURE = (
+    "WRITING_ASK_ACCEPT_TEXT_STRUCTURE"
+)
+
+## Report States
+REPORT_WELCOME_MESSAGE = (
+    "REPORT_WELCOME_MESSAGE"
+)
+REPORT_ASK_THEME = (
+    "REPORT_ASK_THEME"
+)
+REPORT_ASK_WORK_SIZE = (
+    "REPORT_ASK_WORK_SIZE"
+)
+REPORT_ASK_ASPECTS_ANALYSIS = (
+    "REPORT_ASK_ASPECTS_ANALYSIS"
+)
+REPORT_ASK_ANALYSIS_TYPE = (
+    "REPORT_ASK_ANALYSIS_TYPE"
+)
+REPORT_ASK_WRITING_STYLE = (
+    "REPORT_ASK_WRITING_STYLE"
+)
+REPORT_ASK_ANY_INFORMATION = (
+    "REPORT_ASK_ANY_INFORMATION"
+)
+REPORT_ASK_ACCEPT_TEXT_STRUCTURE = (
+    "REPORT_ASK_ACCEPT_TEXT_STRUCTURE"
+)
+
+## Full Report States
+FULL_REPORT_WELCOME_MESSAGE = (
+    "FULL_REPORT_WELCOME_MESSAGE"
+)
+FULL_REPORT_ASK_THEME = (
+    "FULL_REPORT_ASK_THEME"
+)
+FULL_REPORT_ASK_WORK_SIZE = (
+    "FULL_REPORT_ASK_WORK_SIZE"
+)
+FULL_REPORT_ASK_INFORMATION_SOURCE = (
+    "FULL_REPORT_ASK_INFORMATION_SOURCE"
+)
+FULL_REPORT_ASK_WRITING_STYLE = (
+    "FULL_REPORT_ASK_WRITING_STYLE"
+)
+FULL_REPORT_ASK_ANY_INFORMATION = (
+    "FULL_REPORT_ASK_ANY_INFORMATION"
+)
+FULL_REPORT_ASK_ACCEPT_TEXT_STRUCTURE = (
+    "FULL_REPORT_ASK_ACCEPT_TEXT_STRUCTURE"
+)
+
+## HomeWork States
+HOMEWORK_WELCOME_MESSAGE = (
+    "HOMEWORK_WELCOME_MESSAGE"
+)
+HOMEWORK_ASK_THEME = (
+    "HOMEWORK_ASK_THEME"
+)
+HOMEWORK_ASK_WORK_SIZE = (
+    "HOMEWORK_ASK_WORK_SIZE"
+)
+HOMEWORK_ASK_OTHER_REQUIREMENTS = (
+    "HOMEWORK_ASK_OTHER_REQUIREMENTS"
+)
+HOMEWORK_ASK_INFORMATION_SOURCE = (
+    "HOMEWORK_ASK_INFORMATION_SOURCE"
+)
+HOMEWORK_ASK_ANY_INFORMATION = (
+    "HOMEWORK_ASK_ANY_INFORMATION"
+)
+HOMEWORK_ASK_ACCEPT_PLAN = (
+    "HOMEWORK_ASK_ACCEPT_PLAN"
+)
+HOMEWORK_ASK_ACCEPT_TEXT_STRUCTURE = (
+    "HOMEWORK_ASK_ACCEPT_TEXT_STRUCTURE"
+)
+
+## WorkWithFile States
+WORK_WITH_FILE_WELCOME_MESSAGE = (
+    "WORK_WITH_FILE_WELCOME_MESSAGE"
+)
+WORK_WITH_FILE_FILE_ANALYZED = (
+    "WORK_WITH_FILE_FILE_ANALYZED"
+)
+WORK_WITH_FILE_START_ASKING = (
+    "WORK_WITH_FILE_START_ASKING"
 )
 
 # OpenAI context messages
@@ -97,14 +271,14 @@ NOT_YET_MESSAGE2 = (
 PLAN_STRUCTURE_MESSAGE = (
     "Введение"
     "Глава 1. Основные положения ликвидации юридических лиц"
-        "1.1. Основания и способы ликвидации юридических лиц."
-        "1.2. Ликвидация вследствие признания организации (юридического лица) банкротом."
+    "1.1. Основания и способы ликвидации юридических лиц."
+    "1.2. Ликвидация вследствие признания организации (юридического лица) банкротом."
     "Глава 2. Порядок ликвидации"
-        "2.1. Процедура ликвидации юридического лица."
-        "2.2. Выплаты денежных сумм кредиторам. Завершение ликвидации."
+    "2.1. Процедура ликвидации юридического лица."
+    "2.2. Выплаты денежных сумм кредиторам. Завершение ликвидации."
     "Глава 3. Проблемные вопросы ликвидации юридических лиц"
-        "3.1. Новеллы в ликвидации юридических лиц"
-        "3.2. Основные проблемы при ликвидации юридических лиц."
+    "3.1. Новеллы в ликвидации юридических лиц"
+    "3.2. Основные проблемы при ликвидации юридических лиц."
     "Заключение"
     "Список используемой литературы"
 )
