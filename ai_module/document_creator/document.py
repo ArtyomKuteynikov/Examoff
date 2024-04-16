@@ -117,7 +117,27 @@ def init_styles(document: Document) -> None:
     init_item_headings_style(document)
 
 
+def write_chapter(document: Document, heading_text: str, paragraph_text: str, heading_level: int = 1) -> None:
+    """
+    Добавление главы в текстовый документ.
+
+    :param document: Word документ.
+    :param heading_text: Название главы.
+    :param paragraph_text: Текст параграфа.
+    :param heading_level: Уровень главы.
+    """
+    # Добавление названия главы
+    heading = document.add_heading(heading_text, heading_level)
+    heading.style = 'Chapter Headings Style'
+    heading.priority = 10
+
+    # Добавление содержания главы
+    paragraph = document.add_paragraph(paragraph_text)
+    paragraph.style = 'Main Text Style'
+
+
 if __name__ == '__main__':
     my_document = Document()
     init_styles(my_document)
+    write_chapter(my_document, 'test', 'texttest')
     my_document.save('document.docx')
