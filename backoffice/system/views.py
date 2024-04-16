@@ -11,6 +11,7 @@ from django.core.cache import cache
 from django.middleware.csrf import get_token
 from django.shortcuts import render, redirect
 from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
 from passlib.context import CryptContext
 from .models import Settings, Customer, Transactions, Subscriptions
 from django.utils import timezone
@@ -209,6 +210,7 @@ def success(request):
     return render(request, 'panel/success.html', )
 
 
+@csrf_exempt
 def signup_view(request, invite_code=None):
     form = SignUp()
     if request.method == 'POST':
@@ -232,12 +234,14 @@ def signup_view(request, invite_code=None):
     return render(request, 'auth/signup.html', {'form': form, 'invite_code': invite_code})
 
 
+@csrf_exempt
 def referral_view(request, invite_code):
     if not Customer.objects.filter(invite_code=invite_code).first():
         return redirect('index')
     return render(request, 'auth/referral.html', {'invite_code': invite_code, 'invitation_tokens': Settings.objects.first().referer_tokens})
 
 
+@csrf_exempt
 def login_view(request):
     form = LoginForm()
     if request.method == 'POST':
@@ -261,6 +265,7 @@ def login_view(request):
     return render(request, 'auth/login.html', {'form': form})
 
 
+@csrf_exempt
 def set_password(request, token):
     form = ResetForm()
     email = cache.get(f'email:confirm:{token}')
@@ -281,6 +286,7 @@ def set_password(request, token):
     return render(request, 'auth/email-verify.html', {'form': form, 'token': token})
 
 
+@csrf_exempt
 def request_password_reset(request):
     form = EmailForm()
     if request.method == 'POST':
@@ -293,6 +299,7 @@ def request_password_reset(request):
     return render(request, 'auth/reset-1.html', {'form': form})
 
 
+@csrf_exempt
 def reset_password(request, token):
     form = ResetForm()
     email = cache.get(f'email:reset:{token}')
