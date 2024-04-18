@@ -4,6 +4,7 @@ from gateway.chat.dependens.answers import send_message_and_change_state, repeat
 from gateway.chat.processing_message.diploma import process_user_message_on_welcome_message_status, \
     process_user_message_on_ask_work_size_status, generate_user_plan, process_user_message_on_ask_accept_plan_status
 from gateway.resources import strings
+from gateway.resources.chat_state_strings import control_work_state_strings
 from gateway.schemas.chat import ChatSchema
 from gateway.schemas.enums import ControlWorkChatStateEnum
 from gateway.schemas.message import MessageSchema
@@ -41,7 +42,7 @@ class ControlWorkChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.CONTROL_WORK_WELCOME_MESSAGE,
+            message_text=control_work_state_strings.CONTROL_WORK_WELCOME_MESSAGE,
             state=ControlWorkChatStateEnum.WELCOME_MESSAGE,
         )
 
@@ -71,13 +72,13 @@ class ControlWorkChatStateHandler:
             await repeat_state_message(
                 connections=connections,
                 chat=chat,
-                message_text=strings.CONTROL_WORK_WELCOME_MESSAGE,
+                message_text=control_work_state_strings.CONTROL_WORK_WELCOME_MESSAGE,
             )
         elif answer == "Survey":
             await send_message_and_change_state(
                 connections=connections,
                 chat=chat,
-                message_text=strings.CONTROL_WORK_ASK_THEME,
+                message_text=control_work_state_strings.CONTROL_WORK_ASK_THEME,
                 state=ControlWorkChatStateEnum.ASK_THEME,
             )
         elif answer == "File":
@@ -99,7 +100,7 @@ class ControlWorkChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.CONTROL_WORK_ASK_WORK_SIZE,
+            message_text=control_work_state_strings.CONTROL_WORK_ASK_WORK_SIZE,
             state=ControlWorkChatStateEnum.ASK_WORK_SIZE,
         )
 
@@ -117,13 +118,13 @@ class ControlWorkChatStateHandler:
             await repeat_state_message(
                 connections=connections,
                 chat=chat,
-                message_text=strings.CONTROL_WORK_ASK_WORK_SIZE,
+                message_text=control_work_state_strings.CONTROL_WORK_ASK_WORK_SIZE,
             )
         elif answer:
             await send_message_and_change_state(
                 connections=connections,
                 chat=chat,
-                message_text=strings.CONTROL_WORK_ASK_OTHER_REQUIREMENTS,
+                message_text=control_work_state_strings.CONTROL_WORK_ASK_OTHER_REQUIREMENTS,
                 state=ControlWorkChatStateEnum.ASK_OTHER_REQUIREMENTS,
             )
 
@@ -139,7 +140,7 @@ class ControlWorkChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.CONTROL_WORK_ASK_INFORMATION_SOURCE,
+            message_text=control_work_state_strings.CONTROL_WORK_ASK_INFORMATION_SOURCE,
             state=ControlWorkChatStateEnum.ASK_INFORMATION_SOURCE,
         )
 
@@ -155,7 +156,7 @@ class ControlWorkChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.CONTROL_WORK_ASK_ANY_INFORMATION,
+            message_text=control_work_state_strings.CONTROL_WORK_ASK_ANY_INFORMATION,
             state=ControlWorkChatStateEnum.ASK_ANY_INFORMATION,
         )
 
@@ -172,7 +173,7 @@ class ControlWorkChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.CONTROL_WORK_ASK_ACCEPT_PLAN,
+            message_text=control_work_state_strings.CONTROL_WORK_ASK_ACCEPT_PLAN_FIRST_PART,
             state=ControlWorkChatStateEnum.ASK_ACCEPT_PLAN,
         )
         await create_system_message_in_db(
@@ -203,10 +204,27 @@ class ControlWorkChatStateHandler:
 
     @staticmethod
     async def _control_work_ask_accept_text_structure(chat: ChatSchema, message, connections) -> None:
-        # todo
-        print('_control_work_ask_accept_text_structure')
+        """
+        Обработчик для состояния чата `ASK_ACCEPT_TEXT_STRUCTURE`.
+
+        :param chat: Чат пользователя.
+        :param message: Сообщение, отправленное пользователем.
+        :param connections: Список подключений по websocket.
+        """
+        await send_message_and_change_state(
+            connections=connections,
+            chat=chat,
+            message_text=control_work_state_strings.CONTROL_WORK_DIALOG_IS_OVER,
+            state=ControlWorkChatStateEnum.DIALOG_IS_OVER,
+        )
 
     @staticmethod
     async def _control_work_dialog_is_over(chat: ChatSchema, message, connections) -> None:
+        """
+        Обработчик для состояния чата `DIALOG_IS_OVER`.
+
+        :param chat: Чат пользователя.
+        :param message: Сообщение, отправленное пользователем.
+        :param connections: Список подключений по websocket.
+        """
         # todo
-        print('_control_work_dialog_is_over')
