@@ -4,10 +4,10 @@ from gateway.chat.dependens.answers import send_message_and_change_state, repeat
 from gateway.chat.processing_message.diploma import process_user_message_on_welcome_message_status, \
     process_user_message_on_ask_work_size_status, generate_user_plan, process_user_message_on_ask_accept_plan_status
 from gateway.resources import strings
+from gateway.resources.chat_state_strings import diploma_state_strings
 from gateway.schemas.chat import ChatSchema
 from gateway.schemas.enums import DiplomaChatStateEnum
 from gateway.schemas.message import MessageSchema
-
 
 class DiplomaChatStateHandler:
     """
@@ -41,7 +41,7 @@ class DiplomaChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.DIPLOMA_WELCOME_MESSAGE,
+            message_text=diploma_state_strings.DIPLOMA_WELCOME_MESSAGE,
             state=DiplomaChatStateEnum.WELCOME_MESSAGE,
         )
 
@@ -71,20 +71,20 @@ class DiplomaChatStateHandler:
             await repeat_state_message(
                 connections=connections,
                 chat=chat,
-                message_text=strings.DIPLOMA_WELCOME_MESSAGE,
+                message_text=diploma_state_strings.DIPLOMA_WELCOME_MESSAGE,
             )
         elif answer == "Survey":
             await send_message_and_change_state(
                 connections=connections,
                 chat=chat,
-                message_text=strings.DIPLOMA_ASK_THEME,
+                message_text=diploma_state_strings.DIPLOMA_ASK_THEME,
                 state=DiplomaChatStateEnum.ASK_THEME,
             )
         elif answer == "File":
             await repeat_state_message(
                 connections=connections,
                 chat=chat,
-                message_text=strings.NOT_YET_MESSAGE,
+                message_text='todo',
             )
 
     @staticmethod
@@ -99,7 +99,7 @@ class DiplomaChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.DIPLOMA_ASK_WORK_SIZE,
+            message_text=diploma_state_strings.DIPLOMA_ASK_WORK_SIZE,
             state=DiplomaChatStateEnum.ASK_WORK_SIZE,
         )
 
@@ -117,13 +117,13 @@ class DiplomaChatStateHandler:
             await repeat_state_message(
                 connections=connections,
                 chat=chat,
-                message_text=strings.DIPLOMA_ASK_WORK_SIZE,
+                message_text=diploma_state_strings.DIPLOMA_ASK_WORK_SIZE,
             )
         elif answer:
             await send_message_and_change_state(
                 connections=connections,
                 chat=chat,
-                message_text=strings.DIPLOMA_ASK_OTHER_REQUIREMENTS,
+                message_text=diploma_state_strings.DIPLOMA_ASK_OTHER_REQUIREMENTS,
                 state=DiplomaChatStateEnum.ASK_OTHER_REQUIREMENTS,
             )
 
@@ -139,7 +139,7 @@ class DiplomaChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.DIPLOMA_ASK_INFORMATION_SOURCE,
+            message_text=diploma_state_strings.DIPLOMA_ASK_INFORMATION_SOURCE,
             state=DiplomaChatStateEnum.ASK_INFORMATION_SOURCE,
         )
 
@@ -155,7 +155,7 @@ class DiplomaChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.DIPLOMA_ASK_ANY_INFORMATION,
+            message_text=diploma_state_strings.DIPLOMA_ASK_ANY_INFORMATION,
             state=DiplomaChatStateEnum.ASK_ANY_INFORMATION,
         )
 
@@ -172,7 +172,7 @@ class DiplomaChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.DIPLOMA_ASK_ACCEPT_PLAN,
+            message_text=diploma_state_strings.DIPLOMA_ASK_ACCEPT_PLAN_FIRST_PART,
             state=DiplomaChatStateEnum.ASK_ACCEPT_PLAN,
         )
         await create_system_message_in_db(
@@ -203,9 +203,27 @@ class DiplomaChatStateHandler:
 
     @staticmethod
     async def _diploma_ask_accept_text_structure(chat: ChatSchema, message, connections) -> None:
-        # todo
-        print('_diploma_ask_accept_text_structure')
+        """
+        Обработчик для состояния чата `ASK_ACCEPT_TEXT_STRUCTURE`.
+
+        :param chat: Чат пользователя.
+        :param message: Сообщение, отправленное пользователем.
+        :param connections: Список подключений по websocket.
+        """
+        await send_message_and_change_state(
+            connections=connections,
+            chat=chat,
+            message_text=diploma_state_strings.DIPLOMA_DIALOG_IS_OVER,
+            state=DiplomaChatStateEnum.DIALOG_IS_OVER,
+        )
 
     @staticmethod
     async def _diploma_dialog_is_over(chat: ChatSchema, message, connections) -> None:
-        print('_diploma_dialog_is_over')
+        """
+        Обработчик для состояния чата `DIALOG_IS_OVER`.
+
+        :param chat: Чат пользователя.
+        :param message: Сообщение, отправленное пользователем.
+        :param connections: Список подключений по websocket.
+        """
+        # todo

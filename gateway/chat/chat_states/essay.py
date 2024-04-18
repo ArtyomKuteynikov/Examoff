@@ -4,6 +4,7 @@ from gateway.chat.dependens.answers import send_message_and_change_state, repeat
 from gateway.chat.processing_message.diploma import process_user_message_on_welcome_message_status, \
     process_user_message_on_ask_work_size_status, generate_user_plan, process_user_message_on_ask_accept_plan_status
 from gateway.resources import strings
+from gateway.resources.chat_state_strings import essay_state_strings
 from gateway.schemas.chat import ChatSchema
 from gateway.schemas.enums import EssayChatStateEnum
 from gateway.schemas.message import MessageSchema
@@ -44,7 +45,7 @@ class EssayChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.ESSAY_WELCOME_MESSAGE,
+            message_text=essay_state_strings.ESSAY_WELCOME_MESSAGE,
             state=EssayChatStateEnum.WELCOME_MESSAGE,
         )
 
@@ -74,20 +75,20 @@ class EssayChatStateHandler:
             await repeat_state_message(
                 connections=connections,
                 chat=chat,
-                message_text=strings.ESSAY_WELCOME_MESSAGE,
+                message_text=essay_state_strings.ESSAY_WELCOME_MESSAGE,
             )
         elif answer == "Survey":
             await send_message_and_change_state(
                 connections=connections,
                 chat=chat,
-                message_text=strings.ESSAY_ASK_THEME,
+                message_text=essay_state_strings.ESSAY_ASK_THEME,
                 state=EssayChatStateEnum.ASK_THEME,
             )
         elif answer == "File":
             await repeat_state_message(
                 connections=connections,
                 chat=chat,
-                message_text=strings.NOT_YET_MESSAGE,
+                message_text=essay_state_strings.NOT_YET_MESSAGE,
             )
 
     @staticmethod
@@ -102,7 +103,7 @@ class EssayChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.ESSAY_ASK_WORK_SIZE,
+            message_text=essay_state_strings.ESSAY_ASK_WORK_SIZE,
             state=EssayChatStateEnum.ASK_WORK_SIZE,
         )
 
@@ -120,13 +121,13 @@ class EssayChatStateHandler:
             await repeat_state_message(
                 connections=connections,
                 chat=chat,
-                message_text=strings.ESSAY_ASK_WORK_SIZE,
+                message_text=essay_state_strings.ESSAY_ASK_WORK_SIZE,
             )
         elif answer:
             await send_message_and_change_state(
                 connections=connections,
                 chat=chat,
-                message_text=strings.ESSAY_ASK_OTHER_REQUIREMENTS,
+                message_text=essay_state_strings.ESSAY_ASK_OTHER_REQUIREMENTS,
                 state=EssayChatStateEnum.ASK_OTHER_REQUIREMENTS,
             )
 
@@ -142,7 +143,7 @@ class EssayChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.ESSAY_ASK_INFORMATION_SOURCE,
+            message_text=essay_state_strings.ESSAY_ASK_INFORMATION_SOURCE,
             state=EssayChatStateEnum.ASK_INFORMATION_SOURCE,
         )
 
@@ -158,7 +159,7 @@ class EssayChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.ESSAY_ASK_ASPECTS_PROBLEM,
+            message_text=essay_state_strings.ESSAY_ASK_ASPECTS_PROBLEM,
             state=EssayChatStateEnum.ASK_ASPECTS_PROBLEM,
         )
 
@@ -174,7 +175,7 @@ class EssayChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.ESSAY_ASK_OPINION,
+            message_text=essay_state_strings.ESSAY_ASK_OPINION,
             state=EssayChatStateEnum.ASK_OPINION,
         )
 
@@ -190,7 +191,7 @@ class EssayChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.ESSAY_ASK_WRITING_STYLE,
+            message_text=essay_state_strings.ESSAY_ASK_WRITING_STYLE,
             state=EssayChatStateEnum.ASK_WRITING_STYLE,
         )
 
@@ -206,7 +207,7 @@ class EssayChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.ESSAY_ASK_ANY_INFORMATION,
+            message_text=essay_state_strings.ESSAY_ASK_ANY_INFORMATION,
             state=EssayChatStateEnum.ASK_ANY_INFORMATION,
         )
 
@@ -223,7 +224,7 @@ class EssayChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.ESSAY_ASK_ACCEPT_PLAN,
+            message_text=essay_state_strings.ESSAY_ASK_ACCEPT_PLAN_FIRST_PART,
             state=EssayChatStateEnum.ASK_ACCEPT_PLAN,
         )
         await create_system_message_in_db(
@@ -254,8 +255,19 @@ class EssayChatStateHandler:
 
     @staticmethod
     async def _essay_ask_accept_text_structure(chat: ChatSchema, message, connections) -> None:
-        # todo
-        print('_essay_ask_accept_text_structure')
+        """
+        Обработчик для состояния чата `ASK_ACCEPT_TEXT_STRUCTURE`.
+
+        :param chat: Чат пользователя.
+        :param message: Сообщение, отправленное пользователем.
+        :param connections: Список подключений по websocket.
+        """
+        await send_message_and_change_state(
+            connections=connections,
+            chat=chat,
+            message_text=essay_state_strings.ESSAY_DIALOG_IS_OVER,
+            state=EssayChatStateEnum.DIALOG_IS_OVER,
+        )
 
     @staticmethod
     async def _essay_dialog_is_over(chat: ChatSchema, message, connections) -> None:

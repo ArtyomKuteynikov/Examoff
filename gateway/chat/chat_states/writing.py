@@ -4,6 +4,7 @@ from gateway.chat.dependens.answers import send_message_and_change_state, repeat
 from gateway.chat.processing_message.diploma import process_user_message_on_welcome_message_status, \
     process_user_message_on_ask_work_size_status, generate_user_plan, process_user_message_on_ask_accept_plan_status
 from gateway.resources import strings
+from gateway.resources.chat_state_strings import writing_state_strings
 from gateway.schemas.chat import ChatSchema
 from gateway.schemas.enums import WritingChatStateEnum
 from gateway.schemas.message import MessageSchema
@@ -25,11 +26,8 @@ class WritingChatStateHandler:
             WritingChatStateEnum.ASK_WORK_SIZE: self._writing_ask_work_size,
             WritingChatStateEnum.ASK_OTHER_REQUIREMENTS: self._writing_ask_other_requirements,
             WritingChatStateEnum.ASK_INFORMATION_SOURCE: self._writing_ask_information_source,
-            WritingChatStateEnum.ASK_ASPECTS_PROBLEM: self._writing_ask_aspects_problem,
-            WritingChatStateEnum.ASK_OPINION: self._writing_ask_opinion,
             WritingChatStateEnum.ASK_WRITING_STYLE: self._writing_ask_writing_style,
             WritingChatStateEnum.ASK_ANY_INFORMATION: self._writing_ask_any_information,
-            WritingChatStateEnum.ASK_ACCEPT_PLAN: self._writing_ask_accept_plan,
             WritingChatStateEnum.ASK_ACCEPT_TEXT_STRUCTURE: self._writing_ask_accept_text_structure,
             WritingChatStateEnum.DIALOG_IS_OVER: self._writing_dialog_is_over,
         }
@@ -44,7 +42,7 @@ class WritingChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.WRITING_WELCOME_MESSAGE,
+            message_text=writing_state_strings.WRITING_WELCOME_MESSAGE,
             state=WritingChatStateEnum.WELCOME_MESSAGE,
         )
 
@@ -74,13 +72,13 @@ class WritingChatStateHandler:
             await repeat_state_message(
                 connections=connections,
                 chat=chat,
-                message_text=strings.WRITING_WELCOME_MESSAGE,
+                message_text=writing_state_strings.WRITING_WELCOME_MESSAGE,
             )
         elif answer == "Survey":
             await send_message_and_change_state(
                 connections=connections,
                 chat=chat,
-                message_text=strings.WRITING_ASK_THEME,
+                message_text=writing_state_strings.WRITING_ASK_THEME,
                 state=WritingChatStateEnum.ASK_THEME,
             )
         elif answer == "File":
@@ -102,7 +100,7 @@ class WritingChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.WRITING_ASK_WORK_SIZE,
+            message_text=writing_state_strings.WRITING_ASK_WORK_SIZE,
             state=WritingChatStateEnum.ASK_WORK_SIZE,
         )
 
@@ -120,13 +118,13 @@ class WritingChatStateHandler:
             await repeat_state_message(
                 connections=connections,
                 chat=chat,
-                message_text=strings.WRITING_ASK_WORK_SIZE,
+                message_text=writing_state_strings.WRITING_ASK_WORK_SIZE,
             )
         elif answer:
             await send_message_and_change_state(
                 connections=connections,
                 chat=chat,
-                message_text=strings.WRITING_ASK_OTHER_REQUIREMENTS,
+                message_text=writing_state_strings.WRITING_ASK_OTHER_REQUIREMENTS,
                 state=WritingChatStateEnum.ASK_OTHER_REQUIREMENTS,
             )
 
@@ -142,7 +140,7 @@ class WritingChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.WRITING_ASK_INFORMATION_SOURCE,
+            message_text=writing_state_strings.WRITING_ASK_INFORMATION_SOURCE,
             state=WritingChatStateEnum.ASK_INFORMATION_SOURCE,
         )
 
@@ -158,7 +156,7 @@ class WritingChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.WRITING_ASK_WRITING_STYLE,
+            message_text=writing_state_strings.WRITING_ASK_WRITING_STYLE,
             state=WritingChatStateEnum.ASK_WRITING_STYLE,
         )
 
@@ -174,7 +172,7 @@ class WritingChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.WRITING_ASK_ANY_INFORMATION,
+            message_text=writing_state_strings.WRITING_ASK_ANY_INFORMATION,
             state=WritingChatStateEnum.ASK_ANY_INFORMATION,
         )
 
@@ -191,7 +189,7 @@ class WritingChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.WRITING_ASK_ACCEPT_TEXT_STRUCTURE,
+            message_text=writing_state_strings.WRITING_ASK_ACCEPT_TEXT_STRUCTURE,
             state=WritingChatStateEnum.ASK_ACCEPT_TEXT_STRUCTURE,
         )
         await create_system_message_in_db(
@@ -203,8 +201,19 @@ class WritingChatStateHandler:
 
     @staticmethod
     async def _writing_ask_accept_text_structure(chat: ChatSchema, message, connections) -> None:
-        # todo
-        print('_writing_ask_accept_text_structure')
+        """
+        Обработчик для состояния чата `ASK_ACCEPT_TEXT_STRUCTURE`.
+
+        :param chat: Чат пользователя.
+        :param message: Сообщение, отправленное пользователем.
+        :param connections: Список подключений по websocket.
+        """
+        await send_message_and_change_state(
+            connections=connections,
+            chat=chat,
+            message_text=writing_state_strings.WRITING_DIALOG_IS_OVER,
+            state=WritingChatStateEnum.DIALOG_IS_OVER,
+        )
 
     @staticmethod
     async def _writing_dialog_is_over(chat: ChatSchema, message, connections) -> None:
