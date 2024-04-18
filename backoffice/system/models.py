@@ -33,9 +33,9 @@ class Settings(models.Model):
 
 
 class Customer(User):
-    phone = models.CharField(max_length=32, verbose_name="Телефон")
-    name = models.CharField(max_length=64, verbose_name="Имя")
-    surname = models.CharField(max_length=64, verbose_name="Фамилия")
+    phone = models.CharField(max_length=32, verbose_name="Телефон", blank=True, null=True)
+    name = models.CharField(max_length=64, verbose_name="Имя", blank=True, null=True)
+    surname = models.CharField(max_length=64, verbose_name="Фамилия", blank=True, null=True)
     confirmed = models.BooleanField(default=False)
     tokens = models.IntegerField(default=0)
     invite_code = models.CharField(default=uuid.uuid4)

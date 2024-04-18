@@ -9,13 +9,16 @@ from fastapi_jwt_auth.exceptions import AuthJWTException
 from fastapi_pagination import add_pagination
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from fastapi import FastAPI, Request, Depends, HTTPException
+from sqlalchemy import select
 from gateway.config.database import init_db, get_db
 from gateway.config.main import Settings
 from gateway.chat.router import router as router_chat
 from gateway.db.chats.repo import ChatRepo
 from gateway.db.messages.repo import MessageRepo
 from gateway.schemas.message import MessageInCreationSchema
+from gateway.schemas.auth import SignUp, SignIn
+from gateway.db.auth.models import Customer
 
 load_dotenv()
 
@@ -66,6 +69,41 @@ async def shutdown_event():
     await redis_pool.close()
 
 
+def clean_phone(phone):
+    return phone.replace('(', '').replace(')', '').replace('-', '').replace('+', '').replace(' ', '')
+
+
+async def authenticate_user(username: str, password: str, session: AsyncSession):
+    result = await session.execute(
+        select(Customer).where(
+            (Customer.email == username)
+        )
+    )
+    user = result.first()
+    if user and user[0].verify_password(password):
+        return user[0]
+    return None
+
+
+async def register_user(user_data: SignUp, session: AsyncSession):
+    query = select(Customer).where((Customer.email == user_data.email))
+    result = await session.execute(query)
+    user = result.first()
+    if user:
+        return None
+    user = Customer(
+        phone=clean_phone(user_data.phone),
+        email=user_data.email,
+        name=user_data.name,
+        surname=user_data.surname
+    )
+    session.add(user)
+    await session.commit()
+    user.get_password_hash(user_data.password)
+    await session.commit()
+    return user
+
+
 @app.get("/")
 async def root(session: AsyncSession = Depends(get_db)):
     # Код для тестов, он не имеет смысла
@@ -74,5 +112,27 @@ async def root(session: AsyncSession = Depends(get_db)):
     to_print = await repo.get_chat_by_id(2)
     print(f"repo.get_message_by_id = {to_print}")
 
-
     return {"message": "Hello World"}
+
+
+@app.post("/v1/signin", tags=['Account'])
+async def signin(data: SignIn, Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_db)):
+    user = await authenticate_user(data.username, data.password, session)
+    if user is None:
+        raise HTTPException(
+            status_code=401, detail="Incorrect username or password")
+    access_token = Authorize.create_access_token(subject=user.id)
+    return {
+        'access_token': access_token,
+        'customer_id': user.id
+    }
+
+
+@app.post('/v1/signup', tags=['Account'])
+async def signup(data: SignUp, Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_db)):
+    user = await register_user(data, session)
+    if user is None:
+        raise HTTPException(status_code=403, detail="user_not_allowed")
+    return {
+        'result': True
+    }
