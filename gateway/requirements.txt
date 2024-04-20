@@ -16,3 +16,4 @@ sqlmodel
 bcrypt
 python-multipart
 dadata
+openai

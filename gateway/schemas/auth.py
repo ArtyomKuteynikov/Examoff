@@ -16,6 +16,7 @@ class SignUp(BaseModel):
     phone: str
     email: str
     password: str
+    invite_code: str | None
 
 
 class SendEmail(BaseModel):
@@ -30,3 +31,8 @@ class EmailOTP(BaseModel):
 class NewPassword(BaseModel):
     new_password: str
     confirm_password: str
+
+
+class EditPassword(BaseModel):
+    old_password: str
+    new_password: str

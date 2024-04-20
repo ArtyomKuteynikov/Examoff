@@ -40,8 +40,10 @@ class Customer(User):
     tokens = models.IntegerField(default=0)
     invite_code = models.CharField(default=uuid.uuid4)
     referer = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True)
+    auto_payments = models.BooleanField(default=False)
     show = models.BooleanField(default=True)
     active = models.BooleanField(default=True, verbose_name="Статус активности")
+    created = models.DateTimeField(auto_now_add=True, verbose_name="Время")
 
     def set_password_hash(self, password):
         self.password = pwd_context.hash(password)

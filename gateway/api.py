@@ -1,3 +1,5 @@
+import datetime
+import random
 from dotenv import load_dotenv
 from redis import asyncio as aioredis
 from fastapi import FastAPI, Request, Depends
@@ -12,13 +14,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import FastAPI, Request, Depends, HTTPException
 from sqlalchemy import select
 from gateway.config.database import init_db, get_db
-from gateway.config.main import Settings
+from gateway.config.main import Settings, send_email
 from gateway.chat.router import router as router_chat
 from gateway.db.chats.repo import ChatRepo
 from gateway.db.messages.repo import MessageRepo
 from gateway.schemas.message import MessageInCreationSchema
-from gateway.schemas.auth import SignUp, SignIn
-from gateway.db.auth.models import Customer
+from gateway.schemas.auth import SignUp, SignIn, NewPassword, EmailOTP, EditPassword
+from gateway.db.auth.models import Customer, Subscriptions
 
 load_dotenv()
 
@@ -136,3 +138,119 @@ async def signup(data: SignUp, Authorize: AuthJWT = Depends(), session: AsyncSes
     return {
         'result': True
     }
+
+
+@app.post("/v1/verify-email-otp", tags=['Account'])
+async def verify_email_otp(data: EmailOTP, Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_db)):
+    global redis_pool
+    setted_otp = await redis_pool.get(f"email:otp:{data.email}")
+    if setted_otp == str(data.code):
+        user = await session.execute(
+            select(Customer).where((Customer.email == data.email))
+        )
+        user = user.fetchone()
+        if user:
+            access_token = Authorize.create_access_token(subject=user[0].id)
+            return {
+                'access_token': access_token,
+                'customer_id': user.id
+            }
+        raise HTTPException(status_code=404, detail="email_not_found")
+    else:
+        raise HTTPException(status_code=404, detail="email_code_not_found")
+
+
+@app.put('/v1/set-password', tags=['Account'])
+async def set_new_password(data: NewPassword, Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_db)):
+    Authorize.jwt_required()
+    current_user = Authorize.get_jwt_subject()
+    if data.confirm_password == data.new_password:
+        user = await session.execute(
+            select(Customer).where((Customer.id == current_user))
+        )
+        user = user.fetchone()
+        if user:
+            user[0].get_password_hash(data.new_password)
+            await session.commit()
+            return {'result': True}
+        raise HTTPException(status_code=404, detail='user_not_found')
+    raise HTTPException(status_code=400, detail='different_values')
+
+
+@app.get("/v1/reset-password", tags=['Account'])
+async def reset_password(email: str, session: AsyncSession = Depends(get_db)):
+    user = await session.execute(
+        select(Customer).where((Customer.email == email))
+    )
+    user = user.first()
+    global redis_pool
+    if user:
+        otp = random.randint(100000, 999999)
+        await redis_pool.set(f"email:otp:{email}", otp, ex=600)
+        msg_body = f'''Здравствуйте, {user[0].name}!
+Вы запросили сброс пароля. Пожалуйста, подтвердите email:
+Ваш код подтверждения: {otp}'''
+        try:
+            send_email(email, 'Email confirmation', msg_body)
+            return {'result': True}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    return {'result': False}
+
+
+@app.get('/v1/profile', tags=['Account'])
+async def profile(Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_db)):
+    Authorize.jwt_required()
+    current_user = Authorize.get_jwt_subject()
+    user = await session.execute(
+        select(Customer).where((Customer.id == current_user))
+    )
+    user = user.fetchone()
+    subscriptions = await session.execute(
+        select(Subscriptions).where((Subscriptions.customer_id == current_user)).order_by('end')
+    )
+    subscriptions = subscriptions.fetchall()
+    # TODO: count invitations
+    if user:
+        return {'profile': {
+            'email': user[0].email,
+            'auto_payment': user[0].auto_payments,
+            'tg_auth': False,
+            'tokens': user[0].tokens,
+            'subscription': datetime.datetime.now() < subscriptions[-1][0].end if subscriptions else False,
+            'until': subscriptions[-1][0].end if subscriptions else None,
+            'invite_code': user[0].invite_code,
+            'invitations': 10
+        }}
+    raise HTTPException(status_code=404, detail='user_not_found')
+
+
+@app.put('/v1/edit-password', tags=['Account'])
+async def set_new_password(data: EditPassword, Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_db)):
+    Authorize.jwt_required()
+    current_user = Authorize.get_jwt_subject()
+    if data.confirm_password == data.new_password:
+        user = await session.execute(
+            select(Customer).where((Customer.id == current_user))
+        )
+        user = user.fetchone()
+        if user and user[0].verify_password(data.old_password):
+            user[0].get_password_hash(data.new_password)
+            await session.commit()
+            return {'result': True}
+        raise HTTPException(status_code=404, detail='user_not_found')
+    raise HTTPException(status_code=400, detail='different_values')
+
+
+@app.put('/v1/edit-email', tags=['Account'])
+async def edit_email(email: str, Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_db)):
+    Authorize.jwt_required()
+    current_user = Authorize.get_jwt_subject()
+    user = await session.execute(
+        select(Customer).where((Customer.id == current_user))
+    )
+    user = user.fetchone()
+    if user:
+        user[0].email = email
+        await session.commit()
+    raise HTTPException(status_code=404, detail='user_not_found')
