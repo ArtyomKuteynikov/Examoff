@@ -58,13 +58,13 @@ class Settings(Base):
     text: str = Column(String(1024))
 
 
-class Transactions(Base):
-    __tablename__ = "system_transactions"
-
-    customer_id: int = Column(Integer, ForeignKey('customer.id'), nullable=False)
-    amount: float = Column(REAL)
-    type: int = Column(Integer)
-    method: int = Column(Integer)
-    tokens: int = Column(Integer)
-    paid: bool = Column(Boolean, default=False, nullable=False)
-    created = Column(DateTime(timezone=True), default=datetime.utcnow)
+# class Transactions(Base):
+#     __tablename__ = "system_transactions"
+#
+#     customer_id: int = Column(Integer, ForeignKey('customer.id'), nullable=False)
+#     amount: float = Column(REAL)
+#     type: int = Column(Integer)
+#     method: int = Column(Integer)
+#     tokens: int = Column(Integer)
+#     paid: bool = Column(Boolean, default=False, nullable=False)
+#     created = Column(DateTime(timezone=True), default=datetime.utcnow)
