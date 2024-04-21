@@ -11,9 +11,6 @@ class SignIn(BaseModel):
 
 
 class SignUp(BaseModel):
-    name: str
-    surname: str
-    phone: str
     email: str
     password: str
     invite_code: str | None

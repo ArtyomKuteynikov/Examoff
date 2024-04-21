@@ -94,10 +94,7 @@ async def register_user(user_data: SignUp, session: AsyncSession):
     if user:
         return None
     user = Customer(
-        phone=clean_phone(user_data.phone),
         email=user_data.email,
-        name=user_data.name,
-        surname=user_data.surname
     )
     session.add(user)
     await session.commit()
