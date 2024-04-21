@@ -152,12 +152,12 @@ class DiplomaChatStateHandler:
         :param message: Сообщение, отправленное пользователем.
         :param connections: Список подключений по websocket.
         """
-        plan = await generate_user_plan(chat.id)
+        diploma_plan = await generate_user_plan(chat.id)
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
             message_text=diploma_state_strings.DIPLOMA_ASK_ACCEPT_PLAN.format(
-                diploma_plan='diploma_plan'  # todo
+                diploma_plan=diploma_plan  # todo
             ),
             state=DiplomaChatStateEnum.ASK_ACCEPT_PLAN,
         )

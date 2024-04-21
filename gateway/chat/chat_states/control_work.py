@@ -45,6 +45,12 @@ class ControlWorkChatStateHandler:
             message_text=control_work_state_strings.CONTROL_WORK_WELCOME_MESSAGE,
             state=ControlWorkChatStateEnum.WELCOME_MESSAGE,
         )
+        await send_message_and_change_state(
+            connections=connections,
+            chat=chat,
+            message_text=control_work_state_strings.CONTROL_WORK_ASK_THEME,
+            state=ControlWorkChatStateEnum.ASK_THEME,
+        )
 
     async def handle_message(self, chat: ChatSchema, message: MessageSchema, connections) -> None:
         """
@@ -57,36 +63,6 @@ class ControlWorkChatStateHandler:
         method = self.state_methods.get(chat.chat_state)
         if method:
             await method(chat, message, connections)
-
-    @staticmethod
-    async def _control_work_welcome_message(chat: ChatSchema, message: MessageSchema, connections) -> None:
-        """
-        Обработчик для состояния чата `WELCOME_MESSAGE`. Используется ai, чтобы определить цель ответа.
-
-        :param chat: Чат пользователя.
-        :param message: Сообщение, отправленное пользователем.
-        :param connections: Список подключений по websocket.
-        """
-        answer = process_user_message_on_welcome_message_status(message.text)
-        if not answer:
-            await repeat_state_message(
-                connections=connections,
-                chat=chat,
-                message_text=control_work_state_strings.CONTROL_WORK_WELCOME_MESSAGE,
-            )
-        elif answer == "Survey":
-            await send_message_and_change_state(
-                connections=connections,
-                chat=chat,
-                message_text=control_work_state_strings.CONTROL_WORK_ASK_THEME,
-                state=ControlWorkChatStateEnum.ASK_THEME,
-            )
-        elif answer == "File":
-            await repeat_state_message(
-                connections=connections,
-                chat=chat,
-                message_text=strings.NOT_YET_MESSAGE,
-            )
 
     @staticmethod
     async def _control_work_ask_theme(chat: ChatSchema, message, connections) -> None:
@@ -113,20 +89,28 @@ class ControlWorkChatStateHandler:
         :param message: Сообщение, отправленное пользователем.
         :param connections: Список подключений по websocket.
         """
-        answer = process_user_message_on_ask_work_size_status(message.text)
-        if not answer:
-            await repeat_state_message(
-                connections=connections,
-                chat=chat,
-                message_text=control_work_state_strings.CONTROL_WORK_ASK_WORK_SIZE,
-            )
-        elif answer:
-            await send_message_and_change_state(
-                connections=connections,
-                chat=chat,
-                message_text=control_work_state_strings.CONTROL_WORK_ASK_OTHER_REQUIREMENTS,
-                state=ControlWorkChatStateEnum.ASK_OTHER_REQUIREMENTS,
-            )
+        # answer = process_user_message_on_ask_work_size_status(message.text)
+        # if not answer:
+        #     await repeat_state_message(
+        #         connections=connections,
+        #         chat=chat,
+        #         message_text=control_work_state_strings.CONTROL_WORK_ASK_WORK_SIZE,
+        #     )
+        # elif answer:
+        #     await send_message_and_change_state(
+        #         connections=connections,
+        #         chat=chat,
+        #         message_text=control_work_state_strings.CONTROL_WORK_ASK_OTHER_REQUIREMENTS,
+        #         state=ControlWorkChatStateEnum.ASK_OTHER_REQUIREMENTS,
+        #     )
+        # todo Добавить обработчик сообщения
+
+        await send_message_and_change_state(
+            connections=connections,
+            chat=chat,
+            message_text=control_work_state_strings.CONTROL_WORK_ASK_OTHER_REQUIREMENTS,
+            state=ControlWorkChatStateEnum.ASK_OTHER_REQUIREMENTS,
+        )
 
     @staticmethod
     async def _control_work_ask_other_requirements(chat: ChatSchema, message, connections) -> None:
@@ -169,18 +153,14 @@ class ControlWorkChatStateHandler:
         :param message: Сообщение, отправленное пользователем.
         :param connections: Список подключений по websocket.
         """
-        plan = await generate_user_plan(chat.id)
+        control_work_plan = await generate_user_plan(chat.id)
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=control_work_state_strings.CONTROL_WORK_ASK_ACCEPT_PLAN_FIRST_PART,
+            message_text=control_work_state_strings.CONTROL_WORK_ASK_ACCEPT_PLAN.format(
+                control_work_plan=control_work_plan,
+            ),
             state=ControlWorkChatStateEnum.ASK_ACCEPT_PLAN,
-        )
-        await create_system_message_in_db(
-            chat=chat, text=plan, response_specific_state=ControlWorkChatStateEnum.ASK_ANY_INFORMATION
-        )
-        await send_message_in_websockets(
-            connections, chat, plan
         )
 
     async def _control_work_ask_accept_plan(self, chat: ChatSchema, message, connections) -> None:
@@ -191,16 +171,25 @@ class ControlWorkChatStateHandler:
         :param message: Сообщение, отправленное пользователем.
         :param connections: Список подключений по websocket.
         """
-        answer = process_user_message_on_ask_accept_plan_status(message.text)
-        if not answer:
-            await self._control_work_ask_any_information(chat, message, connections)
-        elif answer:
-            await send_message_and_change_state(
-                connections=connections,
-                chat=chat,
-                message_text="todo",
-                state=ControlWorkChatStateEnum.ASK_ACCEPT_TEXT_STRUCTURE,
-            )
+        # todo Добавить обработчик сообщения
+        # answer = process_user_message_on_ask_accept_plan_status(message.text)
+        # if not answer:
+        #     await self._control_work_ask_any_information(chat, message, connections)
+        # elif answer:
+        #     await send_message_and_change_state(
+        #         connections=connections,
+        #         chat=chat,
+        #         message_text="todo",
+        #         state=ControlWorkChatStateEnum.ASK_ACCEPT_TEXT_STRUCTURE,
+        #     )
+        await send_message_and_change_state(
+            connections=connections,
+            chat=chat,
+            message_text=control_work_state_strings.CONTROL_WORK_ASK_ACCEPT_TEXT_STRUCTURE.format(
+                control_work_text_structure='control_work_text_structure',
+            ),
+            state=ControlWorkChatStateEnum.ASK_ACCEPT_TEXT_STRUCTURE,
+        )
 
     @staticmethod
     async def _control_work_ask_accept_text_structure(chat: ChatSchema, message, connections) -> None:
