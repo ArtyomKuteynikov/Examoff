@@ -4,6 +4,7 @@ from gateway.chat.dependens.answers import send_message_and_change_state, repeat
 from gateway.chat.processing_message.diploma import process_user_message_on_welcome_message_status, \
     process_user_message_on_ask_work_size_status, generate_user_plan, process_user_message_on_ask_accept_plan_status
 from gateway.resources import strings
+from gateway.resources.chat_state_strings import report_state_strings
 from gateway.schemas.chat import ChatSchema
 from gateway.schemas.enums import ReportChatStateEnum
 from gateway.schemas.message import MessageSchema
@@ -41,7 +42,7 @@ class ReportChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.REPORT_WELCOME_MESSAGE,
+            message_text=report_state_strings.REPORT_WELCOME_MESSAGE,
             state=ReportChatStateEnum.WELCOME_MESSAGE,
         )
 
@@ -71,13 +72,13 @@ class ReportChatStateHandler:
             await repeat_state_message(
                 connections=connections,
                 chat=chat,
-                message_text=strings.REPORT_WELCOME_MESSAGE,
+                message_text=report_state_strings.REPORT_WELCOME_MESSAGE,
             )
         elif answer == "Survey":
             await send_message_and_change_state(
                 connections=connections,
                 chat=chat,
-                message_text=strings.REPORT_ASK_THEME,
+                message_text=report_state_strings.REPORT_ASK_THEME,
                 state=ReportChatStateEnum.ASK_THEME,
             )
         elif answer == "File":
@@ -99,7 +100,7 @@ class ReportChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.REPORT_ASK_WORK_SIZE,
+            message_text=report_state_strings.REPORT_ASK_WORK_SIZE,
             state=ReportChatStateEnum.ASK_WORK_SIZE,
         )
 
@@ -117,13 +118,13 @@ class ReportChatStateHandler:
             await repeat_state_message(
                 connections=connections,
                 chat=chat,
-                message_text=strings.REPORT_ASK_WORK_SIZE,
+                message_text=report_state_strings.REPORT_ASK_WORK_SIZE,
             )
         elif answer:
             await send_message_and_change_state(
                 connections=connections,
                 chat=chat,
-                message_text=strings.REPORT_ASK_ASPECTS_ANALYSIS,
+                message_text=report_state_strings.REPORT_ASK_ASPECTS_ANALYSIS,
                 state=ReportChatStateEnum.ASK_ASPECTS_ANALYSIS,
             )
 
@@ -139,7 +140,7 @@ class ReportChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.REPORT_ASK_ANALYSIS_TYPE,
+            message_text=report_state_strings.REPORT_ASK_ANALYSIS_TYPE,
             state=ReportChatStateEnum.ASK_ANALYSIS_TYPE,
         )
 
@@ -155,7 +156,7 @@ class ReportChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.REPORT_ASK_WRITING_STYLE,
+            message_text=report_state_strings.REPORT_ASK_WRITING_STYLE,
             state=ReportChatStateEnum.ASK_WRITING_STYLE,
         )
 
@@ -171,7 +172,7 @@ class ReportChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.REPORT_ASK_ANY_INFORMATION,
+            message_text=report_state_strings.REPORT_ASK_ANY_INFORMATION,
             state=ReportChatStateEnum.ASK_ANY_INFORMATION,
         )
 
@@ -188,7 +189,7 @@ class ReportChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.REPORT_ASK_ACCEPT_TEXT_STRUCTURE,
+            message_text=report_state_strings.REPORT_ASK_ACCEPT_TEXT_STRUCTURE,
             state=ReportChatStateEnum.ASK_ACCEPT_TEXT_STRUCTURE,
         )
         await create_system_message_in_db(

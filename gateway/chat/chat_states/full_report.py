@@ -4,6 +4,7 @@ from gateway.chat.dependens.answers import send_message_and_change_state, repeat
 from gateway.chat.processing_message.diploma import process_user_message_on_welcome_message_status, \
     process_user_message_on_ask_work_size_status, generate_user_plan
 from gateway.resources import strings
+from gateway.resources.chat_state_strings import full_report_state_strings
 from gateway.schemas.chat import ChatSchema
 from gateway.schemas.enums import FullReportChatStateEnum
 from gateway.schemas.message import MessageSchema
@@ -40,7 +41,7 @@ class FullReportChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.REPORT_WELCOME_MESSAGE,
+            message_text=full_report_state_strings.FULL_REPORT_WELCOME_MESSAGE,
             state=FullReportChatStateEnum.WELCOME_MESSAGE,
         )
 
@@ -70,13 +71,13 @@ class FullReportChatStateHandler:
             await repeat_state_message(
                 connections=connections,
                 chat=chat,
-                message_text=strings.REPORT_WELCOME_MESSAGE,
+                message_text=full_report_state_strings.FULL_REPORT_WELCOME_MESSAGE,
             )
         elif answer == "Survey":
             await send_message_and_change_state(
                 connections=connections,
                 chat=chat,
-                message_text=strings.REPORT_ASK_THEME,
+                message_text=full_report_state_strings.FULL_REPORT_ASK_THEME,
                 state=FullReportChatStateEnum.ASK_THEME,
             )
         elif answer == "File":
@@ -98,7 +99,7 @@ class FullReportChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.REPORT_ASK_WORK_SIZE,
+            message_text=full_report_state_strings.FULL_REPORT_ASK_WORK_SIZE,
             state=FullReportChatStateEnum.ASK_WORK_SIZE,
         )
 
@@ -116,13 +117,13 @@ class FullReportChatStateHandler:
             await repeat_state_message(
                 connections=connections,
                 chat=chat,
-                message_text=strings.REPORT_ASK_WORK_SIZE,
+                message_text=full_report_state_strings.FULL_REPORT_WRONG_WORK_SIZE,
             )
         elif answer:
             await send_message_and_change_state(
                 connections=connections,
                 chat=chat,
-                message_text=strings.REPORT_ASK_ASPECTS_ANALYSIS,
+                message_text=full_report_state_strings.FULL_REPORT_ASK_INFORMATION_SOURCE,
                 state=FullReportChatStateEnum.ASK_INFORMATION_SOURCE,
             )
 
@@ -138,7 +139,7 @@ class FullReportChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.REPORT_ASK_ANY_INFORMATION,
+            message_text=full_report_state_strings.FULL_REPORT_ASK_WRITING_STYLE,
             state=FullReportChatStateEnum.ASK_WRITING_STYLE,
         )
 
@@ -154,7 +155,7 @@ class FullReportChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.REPORT_ASK_ANY_INFORMATION,
+            message_text=full_report_state_strings.FULL_REPORT_ASK_ANY_INFORMATION,
             state=FullReportChatStateEnum.ASK_ANY_INFORMATION,
         )
 
@@ -171,7 +172,7 @@ class FullReportChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.REPORT_ASK_ACCEPT_TEXT_STRUCTURE,
+            message_text=full_report_state_strings.FULL_REPORT_ASK_ACCEPT_TEXT_STRUCTURE,
             state=FullReportChatStateEnum.ASK_ACCEPT_TEXT_STRUCTURE,
         )
         await create_system_message_in_db(
