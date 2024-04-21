@@ -13,7 +13,7 @@ class SignIn(BaseModel):
 class SignUp(BaseModel):
     email: str
     password: str
-    invite_code: str | None
+    invite_code: str | None = None
 
 
 class SendEmail(BaseModel):
