@@ -4,6 +4,7 @@ from gateway.chat.dependens.answers import send_message_and_change_state, repeat
 from gateway.chat.processing_message.diploma import process_user_message_on_welcome_message_status, \
     process_user_message_on_ask_work_size_status, generate_user_plan, process_user_message_on_ask_accept_plan_status
 from gateway.resources import strings
+from gateway.resources.chat_state_strings import report_state_strings
 from gateway.schemas.chat import ChatSchema
 from gateway.schemas.enums import ReportChatStateEnum
 from gateway.schemas.message import MessageSchema
@@ -20,7 +21,6 @@ class ReportChatStateHandler:
         Для каждого состояние чата свой сценарий взаимодействия.
         """
         self.state_methods = {
-            ReportChatStateEnum.WELCOME_MESSAGE: self._report_welcome_message,
             ReportChatStateEnum.ASK_THEME: self._report_ask_theme,
             ReportChatStateEnum.ASK_WORK_SIZE: self._report_ask_work_size,
             ReportChatStateEnum.ASK_ASPECTS_ANALYSIS: self._report_ask_aspect_analysis,
@@ -41,8 +41,14 @@ class ReportChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.REPORT_WELCOME_MESSAGE,
+            message_text=report_state_strings.REPORT_WELCOME_MESSAGE,
             state=ReportChatStateEnum.WELCOME_MESSAGE,
+        )
+        await send_message_and_change_state(
+            connections=connections,
+            chat=chat,
+            message_text=report_state_strings.REPORT_ASK_THEME,
+            state=ReportChatStateEnum.ASK_THEME,
         )
 
     async def handle_message(self, chat: ChatSchema, message: MessageSchema, connections) -> None:
@@ -58,36 +64,6 @@ class ReportChatStateHandler:
             await method(chat, message, connections)
 
     @staticmethod
-    async def _report_welcome_message(chat: ChatSchema, message: MessageSchema, connections) -> None:
-        """
-        Обработчик для состояния чата `WELCOME_MESSAGE`. Используется ai, чтобы определить цель ответа.
-
-        :param chat: Чат пользователя.
-        :param message: Сообщение, отправленное пользователем.
-        :param connections: Список подключений по websocket.
-        """
-        answer = process_user_message_on_welcome_message_status(message.text)
-        if not answer:
-            await repeat_state_message(
-                connections=connections,
-                chat=chat,
-                message_text=strings.REPORT_WELCOME_MESSAGE,
-            )
-        elif answer == "Survey":
-            await send_message_and_change_state(
-                connections=connections,
-                chat=chat,
-                message_text=strings.REPORT_ASK_THEME,
-                state=ReportChatStateEnum.ASK_THEME,
-            )
-        elif answer == "File":
-            await repeat_state_message(
-                connections=connections,
-                chat=chat,
-                message_text=strings.NOT_YET_MESSAGE,
-            )
-
-    @staticmethod
     async def _report_ask_theme(chat: ChatSchema, message, connections) -> None:
         """
         Обработчик для состояния чата `ASK_THEME`.
@@ -99,7 +75,7 @@ class ReportChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.REPORT_ASK_WORK_SIZE,
+            message_text=report_state_strings.REPORT_ASK_WORK_SIZE,
             state=ReportChatStateEnum.ASK_WORK_SIZE,
         )
 
@@ -112,20 +88,27 @@ class ReportChatStateHandler:
         :param message: Сообщение, отправленное пользователем.
         :param connections: Список подключений по websocket.
         """
-        answer = process_user_message_on_ask_work_size_status(message.text)
-        if not answer:
-            await repeat_state_message(
-                connections=connections,
-                chat=chat,
-                message_text=strings.REPORT_ASK_WORK_SIZE,
-            )
-        elif answer:
-            await send_message_and_change_state(
-                connections=connections,
-                chat=chat,
-                message_text=strings.REPORT_ASK_ASPECTS_ANALYSIS,
-                state=ReportChatStateEnum.ASK_ASPECTS_ANALYSIS,
-            )
+        # todo Добавить обработчик сообщения
+        # answer = process_user_message_on_ask_work_size_status(message.text)
+        # if not answer:
+        #     await repeat_state_message(
+        #         connections=connections,
+        #         chat=chat,
+        #         message_text=report_state_strings.REPORT_ASK_WORK_SIZE,
+        #     )
+        # elif answer:
+        #     await send_message_and_change_state(
+        #         connections=connections,
+        #         chat=chat,
+        #         message_text=report_state_strings.REPORT_ASK_ASPECTS_ANALYSIS,
+        #         state=ReportChatStateEnum.ASK_ASPECTS_ANALYSIS,
+        #     )
+        await send_message_and_change_state(
+            connections=connections,
+            chat=chat,
+            message_text=report_state_strings.REPORT_ASK_ASPECTS_ANALYSIS,
+            state=ReportChatStateEnum.ASK_ASPECTS_ANALYSIS,
+        )
 
     @staticmethod
     async def _report_ask_aspect_analysis(chat: ChatSchema, message, connections) -> None:
@@ -139,7 +122,7 @@ class ReportChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.REPORT_ASK_ANALYSIS_TYPE,
+            message_text=report_state_strings.REPORT_ASK_ANALYSIS_TYPE,
             state=ReportChatStateEnum.ASK_ANALYSIS_TYPE,
         )
 
@@ -155,7 +138,7 @@ class ReportChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.REPORT_ASK_WRITING_STYLE,
+            message_text=report_state_strings.REPORT_ASK_WRITING_STYLE,
             state=ReportChatStateEnum.ASK_WRITING_STYLE,
         )
 
@@ -171,7 +154,7 @@ class ReportChatStateHandler:
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.REPORT_ASK_ANY_INFORMATION,
+            message_text=report_state_strings.REPORT_ASK_ANY_INFORMATION,
             state=ReportChatStateEnum.ASK_ANY_INFORMATION,
         )
 
@@ -184,24 +167,23 @@ class ReportChatStateHandler:
         :param message: Сообщение, отправленное пользователем.
         :param connections: Список подключений по websocket.
         """
-        plan = await generate_user_plan(chat.id)
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=strings.REPORT_ASK_ACCEPT_TEXT_STRUCTURE,
+            message_text=report_state_strings.REPORT_ASK_ACCEPT_TEXT_STRUCTURE.format(
+                report_text_structure='report_text_structure',
+            ),
             state=ReportChatStateEnum.ASK_ACCEPT_TEXT_STRUCTURE,
-        )
-        await create_system_message_in_db(
-            chat=chat, text=plan, response_specific_state=ReportChatStateEnum.ASK_ANY_INFORMATION
-        )
-        await send_message_in_websockets(
-            connections, chat, plan
         )
 
     @staticmethod
     async def _report_ask_accept_text_structure(chat: ChatSchema, message, connections) -> None:
-        # todo
-        print('_report_ask_accept_text_structure')
+        await send_message_and_change_state(
+            connections=connections,
+            chat=chat,
+            message_text=report_state_strings.REPORT_DIALOG_IS_OVER,
+            state=ReportChatStateEnum.DIALOG_IS_OVER,
+        )
 
     @staticmethod
     async def _report_dialog_is_over(chat: ChatSchema, message, connections) -> None:

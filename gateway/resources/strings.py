@@ -1,52 +1,39 @@
 """Text and templates for messages."""
+from typing import Any, Protocol, cast
 
-## Report States
-REPORT_WELCOME_MESSAGE = (
-    "REPORT_WELCOME_MESSAGE"
-)
-REPORT_ASK_THEME = (
-    "REPORT_ASK_THEME"
-)
-REPORT_ASK_WORK_SIZE = (
-    "REPORT_ASK_WORK_SIZE"
-)
-REPORT_ASK_ASPECTS_ANALYSIS = (
-    "REPORT_ASK_ASPECTS_ANALYSIS"
-)
-REPORT_ASK_ANALYSIS_TYPE = (
-    "REPORT_ASK_ANALYSIS_TYPE"
-)
-REPORT_ASK_WRITING_STYLE = (
-    "REPORT_ASK_WRITING_STYLE"
-)
-REPORT_ASK_ANY_INFORMATION = (
-    "REPORT_ASK_ANY_INFORMATION"
-)
-REPORT_ASK_ACCEPT_TEXT_STRUCTURE = (
-    "REPORT_ASK_ACCEPT_TEXT_STRUCTURE"
-)
+from mako.lookup import TemplateLookup
 
-## Full Report States
-FULL_REPORT_WELCOME_MESSAGE = (
-    "FULL_REPORT_WELCOME_MESSAGE"
-)
-FULL_REPORT_ASK_THEME = (
-    "FULL_REPORT_ASK_THEME"
-)
-FULL_REPORT_ASK_WORK_SIZE = (
-    "FULL_REPORT_ASK_WORK_SIZE"
-)
-FULL_REPORT_ASK_INFORMATION_SOURCE = (
-    "FULL_REPORT_ASK_INFORMATION_SOURCE"
-)
-FULL_REPORT_ASK_WRITING_STYLE = (
-    "FULL_REPORT_ASK_WRITING_STYLE"
-)
-FULL_REPORT_ASK_ANY_INFORMATION = (
-    "FULL_REPORT_ASK_ANY_INFORMATION"
-)
-FULL_REPORT_ASK_ACCEPT_TEXT_STRUCTURE = (
-    "FULL_REPORT_ASK_ACCEPT_TEXT_STRUCTURE"
+
+class FormatTemplate(Protocol):
+    """
+    Protocol for correct templates typing.
+
+    Allow use format() instead of render() method that needed to maintain consistency
+    with regular string formatting.
+    """
+
+    def format(self, **kwargs: Any) -> str:  # noqa: WPS125 A003
+        """Render template."""
+
+
+class TemplateFormatterLookup(TemplateLookup):
+    """Represent a collection of templates from the local filesystem."""
+
+    def get_template(self, uri: str) -> FormatTemplate:
+        """Cast default mako template to FormatTemplate."""
+
+        def _format(**kwargs: Any) -> str:  # noqa: WPS430
+            return template.render(**kwargs).rstrip()
+
+        template = super().get_template(uri)
+        template.format = _format  # noqa: WPS125
+        return cast(FormatTemplate, template)
+
+
+lookup = TemplateFormatterLookup(
+    directories=["gateway/resources/templates"],
+    input_encoding="utf-8",
+    strict_undefined=True,
 )
 
 ## HomeWork States
@@ -147,16 +134,16 @@ NOT_YET_MESSAGE2 = (
     "Ты мой личный помощник."
 )
 PLAN_STRUCTURE_MESSAGE = (
-    "Введение"
-    "Глава 1. Основные положения ликвидации юридических лиц"
-    "1.1. Основания и способы ликвидации юридических лиц."
-    "1.2. Ликвидация вследствие признания организации (юридического лица) банкротом."
-    "Глава 2. Порядок ликвидации"
-    "2.1. Процедура ликвидации юридического лица."
-    "2.2. Выплаты денежных сумм кредиторам. Завершение ликвидации."
-    "Глава 3. Проблемные вопросы ликвидации юридических лиц"
-    "3.1. Новеллы в ликвидации юридических лиц"
-    "3.2. Основные проблемы при ликвидации юридических лиц."
-    "Заключение"
-    "Список используемой литературы"
+    "Введение\n"
+    "Глава 1. Основные положения ликвидации юридических лиц\n"
+    "1.1. Основания и способы ликвидации юридических лиц.\n"
+    "1.2. Ликвидация вследствие признания организации (юридического лица) банкротом.\n"
+    "Глава 2. Порядок ликвидации\n"
+    "2.1. Процедура ликвидации юридического лица.\n"
+    "2.2. Выплаты денежных сумм кредиторам. Завершение ликвидации.\n"
+    "Глава 3. Проблемные вопросы ликвидации юридических лиц\n"
+    "3.1. Новеллы в ликвидации юридических лиц\n"
+    "3.2. Основные проблемы при ликвидации юридических лиц.\n"
+    "Заключение\n"
+    "Список используемой литературы\n"
 )

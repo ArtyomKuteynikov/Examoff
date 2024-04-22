@@ -9,6 +9,7 @@ from gateway.schemas.chat import ChatSchema
 from gateway.schemas.enums import DiplomaChatStateEnum
 from gateway.schemas.message import MessageSchema
 
+
 class DiplomaChatStateHandler:
     """
     Обработчик состояния для заказа диплома.
@@ -20,7 +21,6 @@ class DiplomaChatStateHandler:
         Для каждого состояние чата свой сценарий взаимодействия.
         """
         self.state_methods = {
-            DiplomaChatStateEnum.WELCOME_MESSAGE: self._diploma_welcome_message,
             DiplomaChatStateEnum.ASK_THEME: self._diploma_ask_theme,
             DiplomaChatStateEnum.ASK_WORK_SIZE: self._diploma_ask_work_size,
             DiplomaChatStateEnum.ASK_OTHER_REQUIREMENTS: self._diploma_ask_other_requirements,
@@ -44,6 +44,12 @@ class DiplomaChatStateHandler:
             message_text=diploma_state_strings.DIPLOMA_WELCOME_MESSAGE,
             state=DiplomaChatStateEnum.WELCOME_MESSAGE,
         )
+        await send_message_and_change_state(
+            connections=connections,
+            chat=chat,
+            message_text=diploma_state_strings.DIPLOMA_ASK_THEME,
+            state=DiplomaChatStateEnum.ASK_THEME,
+        )
 
     async def handle_message(self, chat: ChatSchema, message: MessageSchema, connections) -> None:
         """
@@ -56,36 +62,6 @@ class DiplomaChatStateHandler:
         method = self.state_methods.get(chat.chat_state)
         if method:
             await method(chat, message, connections)
-
-    @staticmethod
-    async def _diploma_welcome_message(chat: ChatSchema, message: MessageSchema, connections) -> None:
-        """
-        Обработчик для состояния чата `WELCOME_MESSAGE`. Используется ai, чтобы определить цель ответа.
-
-        :param chat: Чат пользователя.
-        :param message: Сообщение, отправленное пользователем.
-        :param connections: Список подключений по websocket.
-        """
-        answer = process_user_message_on_welcome_message_status(message.text)
-        if not answer:
-            await repeat_state_message(
-                connections=connections,
-                chat=chat,
-                message_text=diploma_state_strings.DIPLOMA_WELCOME_MESSAGE,
-            )
-        elif answer == "Survey":
-            await send_message_and_change_state(
-                connections=connections,
-                chat=chat,
-                message_text=diploma_state_strings.DIPLOMA_ASK_THEME,
-                state=DiplomaChatStateEnum.ASK_THEME,
-            )
-        elif answer == "File":
-            await repeat_state_message(
-                connections=connections,
-                chat=chat,
-                message_text='todo',
-            )
 
     @staticmethod
     async def _diploma_ask_theme(chat: ChatSchema, message, connections) -> None:
@@ -112,20 +88,28 @@ class DiplomaChatStateHandler:
         :param message: Сообщение, отправленное пользователем.
         :param connections: Список подключений по websocket.
         """
-        answer = process_user_message_on_ask_work_size_status(message.text)
-        if not answer:
-            await repeat_state_message(
-                connections=connections,
-                chat=chat,
-                message_text=diploma_state_strings.DIPLOMA_ASK_WORK_SIZE,
-            )
-        elif answer:
-            await send_message_and_change_state(
-                connections=connections,
-                chat=chat,
-                message_text=diploma_state_strings.DIPLOMA_ASK_OTHER_REQUIREMENTS,
-                state=DiplomaChatStateEnum.ASK_OTHER_REQUIREMENTS,
-            )
+        # Todo Добавить обработчик сообщения.
+        # answer = process_user_message_on_ask_work_size_status(message.text)
+        # if not answer:
+        #     await repeat_state_message(
+        #         connections=connections,
+        #         chat=chat,
+        #         message_text=diploma_state_strings.DIPLOMA_ASK_WORK_SIZE,
+        #     )
+        # elif answer:
+        #     await send_message_and_change_state(
+        #         connections=connections,
+        #         chat=chat,
+        #         message_text=diploma_state_strings.DIPLOMA_ASK_OTHER_REQUIREMENTS,
+        #         state=DiplomaChatStateEnum.ASK_OTHER_REQUIREMENTS,
+        #     )
+
+        await send_message_and_change_state(
+            connections=connections,
+            chat=chat,
+            message_text=diploma_state_strings.DIPLOMA_ASK_OTHER_REQUIREMENTS,
+            state=DiplomaChatStateEnum.ASK_OTHER_REQUIREMENTS,
+        )
 
     @staticmethod
     async def _diploma_ask_other_requirements(chat: ChatSchema, message, connections) -> None:
@@ -168,18 +152,14 @@ class DiplomaChatStateHandler:
         :param message: Сообщение, отправленное пользователем.
         :param connections: Список подключений по websocket.
         """
-        plan = await generate_user_plan(chat.id)
+        diploma_plan = await generate_user_plan(chat.id)
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=diploma_state_strings.DIPLOMA_ASK_ACCEPT_PLAN_FIRST_PART,
+            message_text=diploma_state_strings.DIPLOMA_ASK_ACCEPT_PLAN.format(
+                diploma_plan=diploma_plan  # todo
+            ),
             state=DiplomaChatStateEnum.ASK_ACCEPT_PLAN,
-        )
-        await create_system_message_in_db(
-            chat=chat, text=plan, response_specific_state=DiplomaChatStateEnum.ASK_ANY_INFORMATION
-        )
-        await send_message_in_websockets(
-            connections, chat, plan
         )
 
     async def _diploma_ask_accept_plan(self, chat: ChatSchema, message, connections) -> None:
@@ -189,17 +169,27 @@ class DiplomaChatStateHandler:
         :param chat: Чат пользователя.
         :param message: Сообщение, отправленное пользователем.
         :param connections: Список подключений по websocket.
-        """
-        answer = process_user_message_on_ask_accept_plan_status(message.text)
-        if not answer:
-            await self._diploma_ask_any_information(chat, message, connections)
-        elif answer:
-            await send_message_and_change_state(
-                connections=connections,
-                chat=chat,
-                message_text="todo",
-                state=DiplomaChatStateEnum.ASK_ACCEPT_TEXT_STRUCTURE,
-            )
+        # """
+        # answer = process_user_message_on_ask_accept_plan_status(message.text)
+        # if not answer:
+        #     await self._diploma_ask_any_information(chat, message, connections)
+        # elif answer:
+        #     await send_message_and_change_state(
+        #         connections=connections,
+        #         chat=chat,
+        #         message_text="todo",
+        #         state=DiplomaChatStateEnum.ASK_ACCEPT_TEXT_STRUCTURE,
+        #     )
+        # todo Добавить обработчик сообщения
+
+        await send_message_and_change_state(
+            connections=connections,
+            chat=chat,
+            message_text=diploma_state_strings.DIPLOMA_ASK_ACCEPT_TEXT_STRUCTURE.format(
+                text_structure='text_structure'  # todo
+            ),
+            state=DiplomaChatStateEnum.ASK_ACCEPT_TEXT_STRUCTURE,
+        )
 
     @staticmethod
     async def _diploma_ask_accept_text_structure(chat: ChatSchema, message, connections) -> None:

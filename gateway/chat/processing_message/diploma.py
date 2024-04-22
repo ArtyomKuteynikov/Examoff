@@ -6,6 +6,7 @@ from openai import OpenAI
 
 from ai_module.schemas.enums import GPT_Model
 from ai_module.schemas.message import UserMessage, SystemMessage, AssistantMessage, messages_to_openai_format
+from gateway.resources.strings import PLAN_STRUCTURE_MESSAGE
 from gateway.schemas.enums import DiplomaChatStateEnum
 from gateway.config.database import get_db
 from gateway.db.messages.repo import MessageRepo
@@ -58,7 +59,7 @@ def process_user_message_on_ask_work_size_status(user_answer: str) -> str | None
     """
     messages = [
         SystemMessage(content=strings.SYSTEM_CONTEXT_DIPLOMA_ASK_WORK_SIZE),
-        AssistantMessage(content=strings.DIPLOMA_ASK_WORK_SIZE),
+        AssistantMessage(content=strings.DIPLOMA_ASK_WORK_SIZE),  # todo Заменить на промт от промтовика.
         UserMessage(content=user_answer + strings.END_OF_USER_MESSAGE_DIPLOMA_ASK_WORK_SIZE),
     ]
     completion = client.chat.completions.create(
@@ -75,6 +76,9 @@ async def generate_user_plan(chat_id) -> str:
     """
     Генерация плана. Следует перенести в другой модуль.
     """
+    # todo Сделать нормальную генерацию плана.
+    return PLAN_STRUCTURE_MESSAGE
+
     async for session in get_db():
         repo = MessageRepo(session)
         messages = await repo.get_messages_by_attributes({"chat_id": chat_id})
