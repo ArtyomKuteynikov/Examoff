@@ -21,7 +21,6 @@ class EssayChatStateHandler:
         Для каждого состояние чата свой сценарий взаимодействия.
         """
         self.state_methods = {
-            EssayChatStateEnum.WELCOME_MESSAGE: self._essay_welcome_message,
             EssayChatStateEnum.ASK_THEME: self._essay_ask_theme,
             EssayChatStateEnum.ASK_WORK_SIZE: self._essay_ask_work_size,
             EssayChatStateEnum.ASK_OTHER_REQUIREMENTS: self._essay_ask_other_requirements,
@@ -48,6 +47,12 @@ class EssayChatStateHandler:
             message_text=essay_state_strings.ESSAY_WELCOME_MESSAGE,
             state=EssayChatStateEnum.WELCOME_MESSAGE,
         )
+        await send_message_and_change_state(
+            connections=connections,
+            chat=chat,
+            message_text=essay_state_strings.ESSAY_ASK_THEME,
+            state=EssayChatStateEnum.ASK_THEME,
+        )
 
     async def handle_message(self, chat: ChatSchema, message: MessageSchema, connections) -> None:
         """
@@ -60,36 +65,6 @@ class EssayChatStateHandler:
         method = self.state_methods.get(chat.chat_state)
         if method:
             await method(chat, message, connections)
-
-    @staticmethod
-    async def _essay_welcome_message(chat: ChatSchema, message: MessageSchema, connections) -> None:
-        """
-        Обработчик для состояния чата `WELCOME_MESSAGE`. Используется ai, чтобы определить цель ответа.
-
-        :param chat: Чат пользователя.
-        :param message: Сообщение, отправленное пользователем.
-        :param connections: Список подключений по websocket.
-        """
-        answer = process_user_message_on_welcome_message_status(message.text)
-        if not answer:
-            await repeat_state_message(
-                connections=connections,
-                chat=chat,
-                message_text=essay_state_strings.ESSAY_WELCOME_MESSAGE,
-            )
-        elif answer == "Survey":
-            await send_message_and_change_state(
-                connections=connections,
-                chat=chat,
-                message_text=essay_state_strings.ESSAY_ASK_THEME,
-                state=EssayChatStateEnum.ASK_THEME,
-            )
-        elif answer == "File":
-            await repeat_state_message(
-                connections=connections,
-                chat=chat,
-                message_text=essay_state_strings.NOT_YET_MESSAGE,
-            )
 
     @staticmethod
     async def _essay_ask_theme(chat: ChatSchema, message, connections) -> None:
@@ -116,20 +91,28 @@ class EssayChatStateHandler:
         :param message: Сообщение, отправленное пользователем.
         :param connections: Список подключений по websocket.
         """
-        answer = process_user_message_on_ask_work_size_status(message.text)
-        if not answer:
-            await repeat_state_message(
-                connections=connections,
-                chat=chat,
-                message_text=essay_state_strings.ESSAY_ASK_WORK_SIZE,
-            )
-        elif answer:
-            await send_message_and_change_state(
-                connections=connections,
-                chat=chat,
-                message_text=essay_state_strings.ESSAY_ASK_OTHER_REQUIREMENTS,
-                state=EssayChatStateEnum.ASK_OTHER_REQUIREMENTS,
-            )
+        # todo Добавить обработчик сообщения
+        # answer = process_user_message_on_ask_work_size_status(message.text)
+        # if not answer:
+        #     await repeat_state_message(
+        #         connections=connections,
+        #         chat=chat,
+        #         message_text=essay_state_strings.ESSAY_ASK_WORK_SIZE,
+        #     )
+        # elif answer:
+        #     await send_message_and_change_state(
+        #         connections=connections,
+        #         chat=chat,
+        #         message_text=essay_state_strings.ESSAY_ASK_OTHER_REQUIREMENTS,
+        #         state=EssayChatStateEnum.ASK_OTHER_REQUIREMENTS,
+        #     )
+
+        await send_message_and_change_state(
+            connections=connections,
+            chat=chat,
+            message_text=essay_state_strings.ESSAY_ASK_OTHER_REQUIREMENTS,
+            state=EssayChatStateEnum.ASK_OTHER_REQUIREMENTS,
+        )
 
     @staticmethod
     async def _essay_ask_other_requirements(chat: ChatSchema, message, connections) -> None:
@@ -220,21 +203,18 @@ class EssayChatStateHandler:
         :param message: Сообщение, отправленное пользователем.
         :param connections: Список подключений по websocket.
         """
-        plan = await generate_user_plan(chat.id)
+        essay_plan = await generate_user_plan(chat.id)
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
-            message_text=essay_state_strings.ESSAY_ASK_ACCEPT_PLAN_FIRST_PART,
+            message_text=essay_state_strings.ESSAY_ASK_ACCEPT_PLAN.format(
+                essay_plan=essay_plan,
+            ),
             state=EssayChatStateEnum.ASK_ACCEPT_PLAN,
         )
-        await create_system_message_in_db(
-            chat=chat, text=plan, response_specific_state=EssayChatStateEnum.ASK_ANY_INFORMATION
-        )
-        await send_message_in_websockets(
-            connections, chat, plan
-        )
 
-    async def _essay_ask_accept_plan(self, chat: ChatSchema, message, connections) -> None:
+    @staticmethod
+    async def _essay_ask_accept_plan(chat: ChatSchema, message, connections) -> None:
         """
         Обработчик для состояния чата `ASK_ACCEPT_PLAN`. Используется ai, чтобы определить цель ответа.
 
@@ -242,16 +222,26 @@ class EssayChatStateHandler:
         :param message: Сообщение, отправленное пользователем.
         :param connections: Список подключений по websocket.
         """
-        answer = process_user_message_on_ask_accept_plan_status(message.text)
-        if not answer:
-            await self._essay_ask_any_information(chat, message, connections)
-        elif answer:
-            await send_message_and_change_state(
-                connections=connections,
-                chat=chat,
-                message_text="todo",
-                state=EssayChatStateEnum.ASK_ACCEPT_TEXT_STRUCTURE,
-            )
+        # todo Добавить обработчик сообщения
+        # answer = process_user_message_on_ask_accept_plan_status(message.text)
+        # if not answer:
+        #     await self._essay_ask_any_information(chat, message, connections)
+        # elif answer:
+        #     await send_message_and_change_state(
+        #         connections=connections,
+        #         chat=chat,
+        #         message_text="todo",
+        #         state=EssayChatStateEnum.ASK_ACCEPT_TEXT_STRUCTURE,
+        #     )
+
+        await send_message_and_change_state(
+            connections=connections,
+            chat=chat,
+            message_text=essay_state_strings.ESSAY_ASK_ACCEPT_TEXT_STRUCTURE.format(
+                text_structure='text_structure',
+            ),
+            state=EssayChatStateEnum.ASK_ACCEPT_TEXT_STRUCTURE,
+        )
 
     @staticmethod
     async def _essay_ask_accept_text_structure(chat: ChatSchema, message, connections) -> None:

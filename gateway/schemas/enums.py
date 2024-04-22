@@ -29,6 +29,7 @@ class WebsocketMessageType(StrEnum):
 class ChatType(StrEnum):
     DIPLOMA_CHAT_TYPE = "DIPLOMA_CHAT_TYPE"
     CONTROL_WORK_CHAT_TYPE = 'CONTROL_WORK_CHAT_TYPE'
+    COURSE_WORK_CHAT_TYPE = 'COURSE_WORK_CHAT_TYPE'
     ESSAY_CHAT_TYPE = 'ESSAY_CHAT_TYPE'
     WRITING_CHAT_TYPE = 'WRITING_CHAT_TYPE'
     REPORT_CHAT_TYPE = 'REPORT_CHAT_TYPE'
@@ -346,6 +347,49 @@ class HomeworkChatStateEnum(StrEnum):
     """
     Состояние диалога при заказе домашнего задания.
     ===============================================
+
+    WELCOME_MESSAGE.
+        Приветствие + выбор “Приступить к началу работы”;
+
+    ASK_THEME.
+        Выбор темы.
+
+    ASK_WORK_SIZE.
+        Выбор объема работы в страницах.
+
+    ASK_OTHER_REQUIREMENTS.
+        Выбор стандартов/требований к работе.
+
+    ASK_INFORMATION_SOURCE.
+        Выбор источников.
+
+    ASK_ANY_INFORMATION.
+        Дополнительная информация от пользователя - переход к следующему этапу.
+
+    ASK_ACCEPT_PLAN.
+        Вывод плана + выбор “Сгенерировать новый план”/”Перейти к генерации текста”.
+
+    ASK_ACCEPT_TEXT_STRUCTURE.
+        Вывод текста + выбор “Сгенерировать новый текст”/”Скачать файл”.
+
+    DIALOG_IS_OVER.
+        Заключение - вывод файла + выбор “К выбору категорий”/”Продолжить”.
+    """
+    WELCOME_MESSAGE = "welcome_message"
+    ASK_THEME = "ask_theme"
+    ASK_WORK_SIZE = "ask_work_size"
+    ASK_OTHER_REQUIREMENTS = "ask_other_requirements"
+    ASK_INFORMATION_SOURCE = "ask_information_source"
+    ASK_ANY_INFORMATION = "ask_any_information"
+    ASK_ACCEPT_PLAN = "ask_accept_plan"
+    ASK_ACCEPT_TEXT_STRUCTURE = "ask_accept_text_structure"
+    DIALOG_IS_OVER = "dialog_is_over"
+
+
+class CourseWorkChatStateEnum(StrEnum):
+    """
+    Состояние диалога при заказе курсовой работы.
+    =============================================
 
     WELCOME_MESSAGE.
         Приветствие + выбор “Приступить к началу работы”;
