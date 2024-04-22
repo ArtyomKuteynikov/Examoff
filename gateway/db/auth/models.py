@@ -12,18 +12,18 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class Customer(Base):
-    __tablename__ = "customer"
+    __tablename__ = "system_customer"
 
     id: int = Column(Integer, primary_key=True)
     name: str = Column(String(50), nullable=True)
     surname: str = Column(String(50), nullable=True)
     phone: str = Column(String(50), nullable=True)
     email: str = Column(String(50), nullable=False)
-    password: str = Column(String(length=1024), nullable=False)
-    confirmed: bool = Column(Boolean, default=False, nullable=False)
+    password: str = Column(String(length=1024), nullable=True)
+    confirmed: bool = Column(Boolean, default=True, nullable=False)
     tokens: int = Column(Integer, default=0)
-    invite_code: str = Column(String(50), default=uuid.uuid4)
-    referer: int = Column(Integer, default=0, nullable=True)
+    invite_code: str = Column(String(50), default=uuid.uuid4().__str__)
+    referer_id: int = Column(Integer, nullable=True)
     auto_payments: bool = Column(Boolean, default=False, nullable=False)
     show: bool = Column(Boolean, default=True, nullable=False)
     active: bool = Column(Boolean, default=True, nullable=False)

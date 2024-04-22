@@ -97,7 +97,7 @@ async def register_user(user_data: SignUp, session: AsyncSession):
         email=user_data.email,
     )
     session.add(user)
-    await session.commit()
+    # await session.commit()
     user.get_password_hash(user_data.password)
     await session.commit()
     return user
@@ -116,7 +116,7 @@ async def root(session: AsyncSession = Depends(get_db)):
 
 @app.post("/v1/signin", tags=['Account'])
 async def signin(data: SignIn, Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_db)):
-    user = await authenticate_user(data.username, data.password, session)
+    user = await authenticate_user(data.email, data.password, session)
     if user is None:
         raise HTTPException(
             status_code=401, detail="Incorrect username or password")
@@ -145,12 +145,12 @@ async def verify_email_otp(data: EmailOTP, Authorize: AuthJWT = Depends(), sessi
         user = await session.execute(
             select(Customer).where((Customer.email == data.email))
         )
-        user = user.fetchone()
+        user = user.first()
         if user:
             access_token = Authorize.create_access_token(subject=user[0].id)
             return {
                 'access_token': access_token,
-                'customer_id': user.id
+                'customer_id': user[0].id
             }
         raise HTTPException(status_code=404, detail="email_not_found")
     else:
