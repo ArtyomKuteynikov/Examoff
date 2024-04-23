@@ -130,3 +130,80 @@ async def websocket_connection(websocket: WebSocket, token: str = Query(...), se
             await manager.broadcast(websocket, websocket_message_data, chat, connection_data.user_id)
     except WebSocketDisconnect:
         manager.disconnect(websocket, connection_data.chat_id)
+
+
+@router.get("/ws/{connect_via_token}", responses={101: {"description": "Switched protocols", }, }, )
+async def connect_to_websocket_via_token(
+        token: str = Query(...),
+):
+    """
+    Подключение к чату по websocket.
+
+    Для того чтобы подключиться, следует выполнить следующий запрос: <br>
+    ws://**{URL_API}**/chat/ws/?token=**{access_token}**.<br><br>
+
+    При успешном подключение отобразиться статус 101 (Switched protocols).
+    """
+
+
+responses_messages_in_websocket = {
+    1: {
+        "description": "Сообщение отправленное от пользователя по websocket.",
+        "content": {
+            "application/json": {
+                "example": {
+                    "message_type": "user_message",
+                    "data": {
+                        "message_text": "Hello, my name is User."
+                    }
+                }
+            }
+        },
+    },
+    2: {
+        "description": "Сообщение отправленное от пользователя по websocket через другое соединение.\n"
+                       "Используется для того, чтобы отобразить сообщение от пользователя на всех устройствах, что были"
+                       " подключены через websocket.",
+        "content": {
+            "application/json": {
+                "example": {
+                    "message_type": "user_message_from_other_socket",
+                    "data": {
+                        "message_text": "Hello, my name is User."
+                    }
+                }
+            }
+        },
+    },
+    3: {
+        "description": "Сообщение отправленное от backend по websocket.",
+        "content": {
+            "application/json": {
+                "example": {
+                    "message_type": "system_message",
+                    "data": {
+                        "message_text": "Response from server."
+                    }
+                }
+            }
+        },
+    },
+}
+
+
+@router.get("/ws/{messages}", responses=responses_messages_in_websocket)
+async def messages_in_websocket(
+        message: WebsocketMessageData,
+):
+    """
+    Отправка и получения сообщений по websocket.
+
+    Из-за того, что websocket считается низкоуровневым подключением, спецификации по OpenAPI у него нет. Придется
+    костылить документацию.
+
+    Следующие Response соответствуют типам сообщений, передаваемых по websocket.
+
+    1. USER_MESSAGE. Сообщение отправленное от пользователя по websocket.
+    1. USER_MESSAGE_FROM_OTHER_SOCKET. Сообщение отправленное от пользователя по websocket через другое соединение.
+    2. SYSTEM_MESSAGE. Сообщение отправленное от сервера по websocket.
+    """
