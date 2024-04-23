@@ -32,7 +32,9 @@ class Settings(models.Model):
         return 'Настройки системы'
 
 
-class Customer(User):
+class Customer(models.Model):
+    email = models.CharField(max_length=64, verbose_name="E-Mail")
+    password = models.CharField(max_length=512)
     phone = models.CharField(max_length=32, verbose_name="Телефон", blank=True, null=True)
     name = models.CharField(max_length=64, verbose_name="Имя", blank=True, null=True)
     surname = models.CharField(max_length=64, verbose_name="Фамилия", blank=True, null=True)
@@ -91,7 +93,7 @@ Examoff'''
         return Settings.objects.first()
 
     class Meta:
-        db_table = "customer"
+        db_table = "system_customer"
         ordering = ('id',)
         verbose_name = 'Клиент'
         verbose_name_plural = 'Клиенты'
