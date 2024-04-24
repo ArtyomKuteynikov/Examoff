@@ -1,0 +1,89 @@
+{
+  "Тема работы": "Политика Петра 1.",
+  "Total capacity": {
+    "min": 36000,
+    "max": 39600
+  },
+  "Element-1": {
+    "Name": "Введение",
+    "Character capacity": 2000
+  },
+  "Element-2": {
+    "Chapter number": 1,
+    "Name": "Реформы в государственном управлении",
+    "Character capacity": 4000
+  },
+  "Element-3": {
+    "Chapter number": 1,
+    "Paragraph number": 1,
+    "Name": "Создание Сената",
+    "Character capacity": 3000
+  },
+  "Element-4": {
+    "Chapter number": 1,
+    "Paragraph number": 2,
+    "Name": "Разделение государства на губернии",
+    "Character capacity": 3200
+  },
+  "Element-5": {
+    "Chapter number": 2,
+    "Name": "Военные реформы",
+    "Character capacity": 3800
+  },
+  "Element-6": {
+    "Chapter number": 2,
+    "Paragraph number": 1,
+    "Name": "Строительство регулярной армии",
+    "Character capacity": 2200
+  },
+  "Element-7": {
+    "Chapter number": 2,
+    "Paragraph number": 2,
+    "Name": "Развитие военно-морского флота",
+    "Character capacity": 2500
+  },
+  "Element-8": {
+    "Chapter number": 3,
+    "Name": "Реформы в области образования и науки",
+    "Character capacity": 3500
+  },
+  "Element-9": {
+    "Chapter number": 3,
+    "Paragraph number": 1,
+    "Name": "Образование Академии наук",
+    "Character capacity": 3000
+  },
+  "Element-10": {
+    "Chapter number": 3,
+    "Paragraph number": 2,
+    "Name": "Введение обязательного начального образования для дворян",
+    "Character capacity": 2800
+  },
+  "Element-11": {
+    "Chapter number": 4,
+    "Name": "Перемены в культуре и обычаях",
+    "Character capacity": 3200
+  },
+  "Element-12": {
+    "Chapter number": 4,
+    "Paragraph number": 1,
+    "Name": "Европеизация и модернизация общества",
+    "Character capacity": 2900
+  },
+  "Element-13": {
+    "Chapter number": 4,
+    "Paragraph number": 2,
+    "Name": "Реформа календаря и изменения в стиле одежды",
+    "Character capacity": 2400
+  },
+  "Element-14": {
+    "Chapter number": 4,
+    "Paragraph number": 3,
+    "Name": "Воздействие на православную церковь",
+    "Character capacity": 2700
+  },
+  "Element-15": {
+    "Name": "Заключение",
+    "Character capacity": 3000
+  }
+}
