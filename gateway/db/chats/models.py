@@ -10,3 +10,4 @@ class ChatModel(Base):
     id: int = Column(Integer, primary_key=True, autoincrement=True)
     chat_state: str = Column(String(100), nullable=True)
     chat_type: str = Column(String(50), nullable=False, default="DIPLOMA_CHAT_TYPE")
+    user_owner_id: int = Column(Integer, nullable=False)  # ID владельца чата

@@ -3,13 +3,15 @@ from django.contrib.auth.models import User
 from django.db import models
 from passlib.context import CryptContext
 
+from system.models import Customer
+
 # from system.models import Customer
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class Chat(models.Model):
-    # customer = models.ForeignKey(Customer, on_delete=models.CASCADE, verbose_name="Клиент")
+    user_owner = models.ForeignKey(Customer, on_delete=models.CASCADE, verbose_name="Клиент")
     chat_state = models.CharField(max_length=100, null=True, blank=True)
 
     DIPLOMA_CHAT_TYPE = 'DIPLOMA_CHAT_TYPE'

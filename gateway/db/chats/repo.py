@@ -21,6 +21,7 @@ class ChatRepo:
             model_data={
                 "chat_state": chat_in_creation.chat_state,
                 "chat_type": chat_in_creation.chat_type,
+                "user_owner_id": chat_in_creation.user_owner_id,
             }
         )
         return await self.get_chat_by_id(chat_row.id)
@@ -54,6 +55,7 @@ class ChatRepo:
             model_data={
                 "chat_state": chat.chat_state,
                 "chat_type": chat.chat_type,
+                "user_owner_id": chat.user_owner_id,
             },
             pkey_val=chat.id,
         )

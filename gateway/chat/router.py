@@ -12,11 +12,15 @@ import jwt
 
 from gateway.db.chats.repo import ChatRepo
 from gateway.db.messages.repo import MessageRepo
-from gateway.schemas.chat import ChatSchema
-from gateway.schemas.enums import WebsocketMessageType
+from gateway.schemas.chat import ChatSchema, ChatInCreationSchema
+from gateway.schemas.enums import WebsocketMessageType, ChatType
 from gateway.schemas.message import MessageSchema, MessageInCreationSchema
 from gateway.schemas.token import JWTTokenPayloadDataSchema
 from gateway.schemas.websocket_data import WebsocketMessageData, websocket_message_data_to_websocket_format
+
+from fastapi_jwt_auth import AuthJWT
+from gateway.db.auth.models import Customer, Subscriptions
+from sqlalchemy import select
 
 router = APIRouter(
     prefix="/chat",
@@ -29,11 +33,16 @@ async def validate_token(token: str):
         data = jwt.decode(str(token), SECRET_AUTH, algorithms=["HS256"])
     except jwt.ExpiredSignatureError:
         return None
-    if 'user_id' in data and 'chat_id' in data:
-        return JWTTokenPayloadDataSchema(
-            user_id=data['user_id'],
-            chat_id=data['chat_id']
-        )
+
+    async for session in get_db():
+        chat_repo = ChatRepo(session)
+        chat = await chat_repo.get_chat_by_id(data['chat_id'])
+
+        if data['user_id'] == chat.user_owner_id:
+            return JWTTokenPayloadDataSchema(
+                user_id=data['user_id'],
+                chat_id=data['chat_id']
+            )
 
 
 class ConnectionManager:
@@ -130,6 +139,81 @@ async def websocket_connection(websocket: WebSocket, token: str = Query(...), se
             await manager.broadcast(websocket, websocket_message_data, chat, connection_data.user_id)
     except WebSocketDisconnect:
         manager.disconnect(websocket, connection_data.chat_id)
+
+
+@router.post("/", responses={
+    200: {
+        "description": "Successful Response.",
+        "content": {
+            "application/json": {
+                "example": {
+                    'chat_id': 1,
+                }
+            }
+        }
+    }}
+             )
+async def chat_create(chat_type: ChatType, Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_db)):
+    """
+    Создание чата. Возвращает id чата.
+    """
+    Authorize.jwt_required()
+    current_user = Authorize.get_jwt_subject()
+    user = await session.execute(
+        select(Customer).where((Customer.id == current_user))
+    )
+    user = user.fetchone()
+
+    chat_in_creation = ChatInCreationSchema(
+        user_owner_id=user[0].id,
+        chat_type=chat_type
+    )
+    try:
+        chat_repo = ChatRepo(session)
+        chat = await chat_repo.create_chat(chat_in_creation)
+
+        return {
+            'chat_id': chat.id,
+        }
+    except Exception:
+        raise HTTPException(status_code=403, detail="Chat not allowed")
+
+
+@router.post("/token", responses={
+    200: {
+        "description": "Successful Response",
+        "content": {
+            "application/json": {
+                "example": {
+                    'chat_jwt': 'eyJ0eXAiOiJKV...',
+                }
+            }
+        }
+    }}
+             )
+async def get_chat_token(chat_id: int, Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_db)):
+    """
+    Возвращает token для подключения по websocket к чату.
+    """
+    Authorize.jwt_required()
+    current_user = Authorize.get_jwt_subject()
+    user = await session.execute(
+        select(Customer).where((Customer.id == current_user))
+    )
+    user = user.fetchone()
+
+    try:
+        chat_repo = ChatRepo(session)
+        chat = await chat_repo.get_chat_by_id(chat_id)
+
+        if user[0].id == chat.user_owner_id:
+            encoded_jwt = jwt.encode(
+                {"chat_id": chat_id, "user_id": user[0].id}, SECRET_AUTH, algorithm="HS256"
+            ).decode('utf-8')
+            return {'chat_jwt': encoded_jwt, }
+        raise HTTPException(status_code=403, detail="Chat not allowed")
+    except Exception:
+        raise HTTPException(status_code=403, detail="Chat not allowed")
 
 
 @router.get("/ws/{connect_via_token}", responses={101: {"description": "Switched protocols", }, }, )
