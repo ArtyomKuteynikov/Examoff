@@ -165,7 +165,7 @@ async def set_new_password(data: NewPassword, Authorize: AuthJWT = Depends(), se
         user = await session.execute(
             select(Customer).where((Customer.id == current_user))
         )
-        user = user.fetchone()
+        user = user.first()
         if user:
             user[0].get_password_hash(data.new_password)
             await session.commit()
@@ -184,7 +184,7 @@ async def reset_password(email: str, session: AsyncSession = Depends(get_db)):
     if user:
         otp = random.randint(100000, 999999)
         await redis_pool.set(f"email:otp:{email}", otp, ex=600)
-        msg_body = f'''Здравствуйте, {user[0].name}!
+        msg_body = f'''Здравствуйте!
 Вы запросили сброс пароля. Пожалуйста, подтвердите email:
 Ваш код подтверждения: {otp}'''
         try:
@@ -226,17 +226,15 @@ async def profile(Authorize: AuthJWT = Depends(), session: AsyncSession = Depend
 async def set_new_password(data: EditPassword, Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_db)):
     Authorize.jwt_required()
     current_user = Authorize.get_jwt_subject()
-    if data.confirm_password == data.new_password:
-        user = await session.execute(
-            select(Customer).where((Customer.id == current_user))
-        )
-        user = user.fetchone()
-        if user and user[0].verify_password(data.old_password):
-            user[0].get_password_hash(data.new_password)
-            await session.commit()
-            return {'result': True}
-        raise HTTPException(status_code=404, detail='user_not_found')
-    raise HTTPException(status_code=400, detail='different_values')
+    user = await session.execute(
+        select(Customer).where((Customer.id == current_user))
+    )
+    user = user.fetchone()
+    if user and user[0].verify_password(data.old_password):
+        user[0].get_password_hash(data.new_password)
+        await session.commit()
+        return {'result': True}
+    raise HTTPException(status_code=404, detail='user_not_found')
 
 
 @app.put('/v1/edit-email', tags=['Account'])
@@ -247,7 +245,38 @@ async def edit_email(email: str, Authorize: AuthJWT = Depends(), session: AsyncS
         select(Customer).where((Customer.id == current_user))
     )
     user = user.fetchone()
+    global redis_pool
     if user:
-        user[0].email = email
-        await session.commit()
-    raise HTTPException(status_code=404, detail='user_not_found')
+        otp = random.randint(100000, 999999)
+        await redis_pool.set(f"email:otp:{user[0].email}", otp, ex=600)
+        await redis_pool.set(f"email:new:{user[0].email}", email, ex=600)
+        msg_body = f'''Здравствуйте!
+Вы запросили изменение email. Пожалуйста, подтвердите новый email:
+Ваш код подтверждения: {otp}'''
+        try:
+            send_email(email, 'Email confirmation', msg_body)
+            return {'result': True}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    return {'result': False}
+
+
+@app.put('/v1/edit-email-confirm', tags=['Account'])
+async def edit_email(code: int, Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_db)):
+    Authorize.jwt_required()
+    current_user = Authorize.get_jwt_subject()
+    user = await session.execute(
+        select(Customer).where((Customer.id == current_user))
+    )
+    user = user.fetchone()
+    global redis_pool
+    if user:
+        setted_otp = await redis_pool.get(f"email:otp:{user[0].email}")
+        if setted_otp == str(code):
+            email = await redis_pool.get(f"email:new:{user[0].email}")
+            user[0].email = email
+            await session.commit()
+            return {'result': True}
+        raise HTTPException(status_code=404, detail="email_not_found")
+    else:
+        raise HTTPException(status_code=404, detail="email_code_not_found")
