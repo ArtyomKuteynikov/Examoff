@@ -165,20 +165,62 @@ async def chat_create(chat_type: ChatType, Authorize: AuthJWT = Depends(), sessi
         select(Customer).where((Customer.id == current_user))
     )
     user = user.fetchone()
+    if user:
+        chat_in_creation = ChatInCreationSchema(
+            user_owner_id=user[0].id,
+            chat_type=chat_type
+        )
+        try:
+            chat_repo = ChatRepo(session)
+            chat = await chat_repo.create_chat(chat_in_creation)
 
-    chat_in_creation = ChatInCreationSchema(
-        user_owner_id=user[0].id,
-        chat_type=chat_type
-    )
-    try:
-        chat_repo = ChatRepo(session)
-        chat = await chat_repo.create_chat(chat_in_creation)
+            return {
+                'chat_id': chat.id,
+            }
+        except Exception:
+            raise HTTPException(status_code=403, detail="Chat not allowed")
+    else:
+        raise HTTPException(status_code=403, detail="Auth failed.")
 
-        return {
-            'chat_id': chat.id,
+
+@router.get("/", responses={
+    200: {
+        "description": "Successful Response.",
+        "content": {
+            "application/json": {
+                "example": {
+                    "chats": [
+                        {
+                            "id": 15,
+                            "user_owner_id": 2,
+                            "chat_state": "welcome_message",
+                            "chat_type": "DIPLOMA_CHAT_TYPE"
+                        },
+                        {
+                            "id": 16,
+                            "user_owner_id": 2,
+                            "chat_state": "dialog_is_over",
+                            "chat_type": "ESSAY_CHAT_TYPE"
+                        },
+                    ]
+                }
+            }
         }
-    except Exception:
-        raise HTTPException(status_code=403, detail="Chat not allowed")
+    }}
+            )
+async def get_users_chats(Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_db)):
+    Authorize.jwt_required()
+    current_user = Authorize.get_jwt_subject()
+    user = await session.execute(
+        select(Customer).where((Customer.id == current_user))
+    )
+    user = user.fetchone()
+    if user:
+        chat_repo = ChatRepo(session)
+        chats = await chat_repo.get_chats_by_attributes({'user_owner_id': user[0].id})
+        return {'chats': chats}
+    else:
+        raise HTTPException(status_code=403, detail="Auth failed.")
 
 
 @router.post("/token", responses={
