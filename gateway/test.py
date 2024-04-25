@@ -18,7 +18,7 @@ def check_token(token: str):
 
 
 async def connect_to_websocket_server(room_id):
-    encoded_jwt = jwt.encode({"room_id": room_id, "role_id": 0, "user_id":5},
+    encoded_jwt = jwt.encode({"room_id": room_id, "role_id": 0, "user_id": 5},
                              SECRET_AUTH,
                              algorithm="HS256").decode('utf-8')
     uri = f"ws://127.0.0.1:8000/chat/ws/{room_id}?token={encoded_jwt}"  # Replace this with the WebSocket server URI
