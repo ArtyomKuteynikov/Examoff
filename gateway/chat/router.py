@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from gateway.chat.chat_states.fsm import FSM
 from gateway.config.main import SECRET_AUTH
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, Depends
-from fastapi import HTTPException
+from fastapi import HTTPException, WebSocketException
 from gateway.config.database import async_session_maker, get_db, add_messages_to_database
 import jwt
 
@@ -32,6 +32,8 @@ async def validate_token(token: str):
     try:
         data = jwt.decode(str(token), SECRET_AUTH, algorithms=["HS256"])
     except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidSignatureError:
         return None
 
     async for session in get_db():
@@ -123,7 +125,7 @@ manager = ConnectionManager()
 async def websocket_connection(websocket: WebSocket, token: str = Query(...), session: AsyncSession = Depends(get_db)):
     connection_data = await validate_token(token)
     if not connection_data:
-        raise HTTPException(status_code=403, detail='incorrect_token')
+        raise WebSocketException(code=403, reason='incorrect_token')
     await manager.connect(websocket, connection_data.chat_id)
 
     chat_repo = ChatRepo(session=session)
