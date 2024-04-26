@@ -1,4 +1,5 @@
 """Обработчик состояний чата для заказа диплома."""
+from ai_module.openai_utilities.document_structure import generate_test_structure
 from ai_module.openai_utilities.message_handler import handle_question_ask_work_size
 from ai_module.openai_utilities.plan import generate_plan_via_chat, get_work_plan_from_db
 from gateway.chat.dependens.answers import send_message_and_change_state, repeat_state_message, \
@@ -10,7 +11,7 @@ from gateway.db.messages.repo import MessageRepo
 from gateway.resources import strings
 from gateway.resources.chat_state_strings import diploma_state_strings
 from gateway.schemas.chat import ChatSchema
-from gateway.schemas.enums import DiplomaChatStateEnum
+from gateway.schemas.enums import DiplomaChatStateEnum, ChatTypeTranslate
 from gateway.schemas.message import MessageSchema
 
 
@@ -188,7 +189,7 @@ class DiplomaChatStateHandler:
 
     async def _diploma_ask_accept_plan(self, chat: ChatSchema, message, connections) -> None:
         """
-        Обработчик для состояния чата `ASK_ACCEPT_PLAN`. Используется ai, чтобы определить цель ответа.
+        Обработчик для состояния чата `ASK_ACCEPT_PLAN`.
 
         :param chat: Чат пользователя.
         :param message: Сообщение, отправленное пользователем.
@@ -212,14 +213,31 @@ class DiplomaChatStateHandler:
             await send_ask_accept_work_plan_buttons(connections, chat)
 
         elif message.text == 'Да, согласен':
+            await repeat_state_message(
+                connections=connections,
+                chat=chat,
+                message_text='Идет генерация структуры работы ...',
+            )
+            plan = await get_work_plan_from_db(chat)
+            text_structure = await generate_test_structure(type_work=ChatTypeTranslate[chat.chat_type].value, plan=plan)
+            if not text_structure:
+                await send_message_and_change_state(
+                    connections=connections,
+                    chat=chat,
+                    message_text='Произошла ошибка генерации. Создайте заказ заново.',
+                    state=DiplomaChatStateEnum.ASK_ACCEPT_PLAN,
+                )
+                return
             await send_message_and_change_state(
                 connections=connections,
                 chat=chat,
                 message_text=diploma_state_strings.DIPLOMA_ASK_ACCEPT_TEXT_STRUCTURE.format(
-                    text_structure='text_structure'  # todo
+                    text_structure=text_structure
+
                 ),
                 state=DiplomaChatStateEnum.ASK_ACCEPT_TEXT_STRUCTURE,
             )
+
 
         elif message.text == 'Нет, не согласен':
             await self._diploma_ask_any_information(chat, message, connections)
