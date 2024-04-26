@@ -32,7 +32,10 @@ class FileRepo:
             select(File).where(File.id == file_id)
         )
         file = result.scalars().unique().first()
-        return FileSchema.model_validate(file)
+        return FileSchema(
+            id=file.id,
+            user_id=file.user_id,
+        )
 
     async def get_files_by_user_id(self, user_id: int) -> List[FileSchema]:
         """Retrieve files by user_id."""

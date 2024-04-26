@@ -1,5 +1,7 @@
 import datetime
 import random
+import uuid
+
 from dotenv import load_dotenv
 from redis import asyncio as aioredis
 from fastapi import FastAPI, Request, Depends
@@ -17,10 +19,18 @@ from gateway.config.database import init_db, get_db
 from gateway.config.main import Settings, send_email
 from gateway.chat.router import router as router_chat
 from gateway.db.chats.repo import ChatRepo
+from gateway.db.files.models import File
+from gateway.db.files.repo import FileRepo
 from gateway.db.messages.repo import MessageRepo
+from gateway.schemas.file import FileSchema
 from gateway.schemas.message import MessageInCreationSchema
 from gateway.schemas.auth import SignUp, SignIn, NewPassword, EmailOTP, EditPassword
 from gateway.db.auth.models import Customer, Subscriptions
+from fastapi import FastAPI, HTTPException, Depends, Response
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine
+from fastapi.responses import FileResponse
 
 load_dotenv()
 
@@ -332,3 +342,22 @@ async def get_user_messages_by_chat(
             return {'messages': messages}
 
     raise HTTPException(status_code=403, detail="Auth failed.")
+
+
+@app.get("/files/{file_id}", response_class=FileResponse)
+async def download_file(file_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    """
+    Download a file by its UUID.
+
+    This endpoint will retrieve the file if the file with the given UUID exists and the user has permissions to access it.
+    """
+    file_repo = FileRepo(db)
+    file_data: FileSchema = await file_repo.get_file_by_id(file_id)
+    if not file_data:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    file_path = f"files/{file_data.id}.docx"
+    try:
+        return FileResponse(path=file_path, filename=str(file_data.id)+'.docx', media_type='application/octet-stream')
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="File not found on server")

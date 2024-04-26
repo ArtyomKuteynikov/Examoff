@@ -4,6 +4,8 @@ from django.db import models
 from passlib.context import CryptContext
 
 from system.models import Customer
+from django.db import models
+import uuid
 
 # from system.models import Customer
 
@@ -48,3 +50,12 @@ class Message(models.Model):
 
     def __str__(self):
         return f'{self.sender}. {self.created_at.strftime("%Y-%m-%d %H:%M")}'
+
+
+class File(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4,
+                          editable=False)  # Уникальный идентификатор и название файла
+    user_id = models.IntegerField()  # ID пользователя, который может скачать файл
+
+    class Meta:
+        db_table = 'files'  # Указание имени таблицы
