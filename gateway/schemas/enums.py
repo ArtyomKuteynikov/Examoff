@@ -38,6 +38,18 @@ class ChatType(StrEnum):
     WORK_WITH_FILE_CHAT_TYPE = 'WORK_WITH_FILE_CHAT_TYPE'
 
 
+class ChatTypeTranslate(StrEnum):
+    DIPLOMA_CHAT_TYPE = "Дипломная работа"
+    CONTROL_WORK_CHAT_TYPE = 'Контрольная работа'
+    COURSE_WORK_CHAT_TYPE = 'Курсовая работа'
+    ESSAY_CHAT_TYPE = 'Эссе'
+    WRITING_CHAT_TYPE = 'Сочинение'
+    REPORT_CHAT_TYPE = 'Реферат'
+    FULL_REPORT_CHAT_TYPE = 'Доклад'
+    HOMEWORK_CHAT_TYPE = 'Домашняя работа'
+    WORK_WITH_FILE_CHAT_TYPE = 'Работа с файлом'
+
+
 class DiplomaChatStateEnum(StrEnum):
     """
     Состояние диалога при заказе дипломной работы.

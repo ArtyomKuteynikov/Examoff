@@ -280,3 +280,55 @@ async def edit_email(code: int, Authorize: AuthJWT = Depends(), session: AsyncSe
         raise HTTPException(status_code=404, detail="email_not_found")
     else:
         raise HTTPException(status_code=404, detail="email_code_not_found")
+
+
+@app.get("/messages", responses={
+    200: {
+        "description": "Successful Response.",
+        "content": {
+            "application/json": {
+                "example": {
+                    "messages": [
+                        {
+                            "id": 349,
+                            "chat_id": 25,
+                            "text": "Привет! Я - Examoff, твой верный компаньон в образовательном путешествии.\n",
+                            "sender_id": 1,
+                            "created_at": "2024-04-24T18:48:45.796985Z",
+                            "response_specific_state": 'null'
+                        },
+                        {
+                            "id": 352,
+                            "chat_id": 25,
+                            "text": "Привет.",
+                            "sender_id": 3,
+                            "created_at": "2024-04-24T18:48:45.796000Z",
+                            "response_specific_state": 'null'
+                        }
+                    ]
+                }
+            }
+        }
+    }}
+         )
+async def get_user_messages_by_chat(
+        chat_id: int,
+        Authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_db)
+):
+    Authorize.jwt_required()
+    current_user = Authorize.get_jwt_subject()
+    user = await session.execute(
+        select(Customer).where((Customer.id == current_user))
+    )
+    user = user.fetchone()
+    if user:
+        chat_repo = ChatRepo(session)
+        chats = await chat_repo.get_chats_by_attributes({'user_owner_id': user[0].id})
+        result = list(filter(lambda chat: (chat.id == chat_id), chats))
+        if result:
+            message_repo = MessageRepo(session)
+            messages = await message_repo.get_messages_by_attributes({'chat_id': chat_id})
+            return {'messages': messages}
+
+    raise HTTPException(status_code=403, detail="Auth failed.")

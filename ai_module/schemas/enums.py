@@ -18,6 +18,7 @@ class GPT_Model(StrEnum):
     GPT_4_32K_0314 = "gpt-4-32k-0314"
     GPT_4_0613 = "gpt-4-0613"
     GPT_4_32K_0613 = "gpt-4-32k-0613"
+    GPT_4_TURBO = "gpt-4-turbo"
 
 
 class Claude_Model(StrEnum):

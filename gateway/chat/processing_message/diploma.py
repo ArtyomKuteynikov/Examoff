@@ -17,31 +17,7 @@ client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", "OPENAI_API_KEY is empt
 
 
 def process_user_message_on_welcome_message_status(user_answer: str) -> str | None:
-    """
-    Обработка сообщения пользователя при помощи ai для статуса `WELCOME_MESSAGE`.
-    Определяет какой вариант ответа выбрал пользователь:
-        Survey: Опрос внутри чата;
-        File: Загрузка файла;
-        None: Пользователь не определился с выбором.
-
-    :param user_answer: Сообщение пользователя.
-    """
-    messages = [
-        SystemMessage(content=strings.SYSTEM_CONTEXT_DIPLOMA_WELCOME_MESSAGE),
-        AssistantMessage(content=strings.DIPLOMA_WELCOME_MESSAGE),
-        UserMessage(content=user_answer + strings.END_OF_USER_MESSAGE_DIPLOMA_WELCOME_MESSAGE),
-    ]
-    completion = client.chat.completions.create(
-        model=GPT_Model.GPT_3_5_TURBO_0125,
-        messages=messages_to_openai_format(messages),
-    )
-    try:
-        if int(completion.choices[0].message.content) == 1:
-            return "Survey"
-        if int(completion.choices[0].message.content) == 2:
-            return "File"
-    except TypeError:
-        return None
+    pass
 
 
 def process_user_message_on_ask_theme_status(user_answer: str):

@@ -84,3 +84,20 @@ async def repeat_state_message(connections, chat: ChatSchema, message_text: str)
     """
     await create_system_message_in_db(chat, message_text)
     await send_message_in_websockets(connections, chat, message_text)
+
+
+async def send_ask_accept_work_plan_buttons(connections, chat: ChatSchema):
+    yes_button = {
+        "message_type": "system_message",
+        "data": {
+            "button": "Да, согласен"
+        }
+    }
+    no_button = {
+        "message_type": "system_message",
+        "data": {
+            "button": "Нет, не согласен"
+        }
+    }
+    await send_message_in_websockets(connections, chat, str(yes_button))
+    await send_message_in_websockets(connections, chat, str(no_button))

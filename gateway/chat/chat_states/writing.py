@@ -45,6 +45,12 @@ class WritingChatStateHandler:
             message_text=writing_state_strings.WRITING_WELCOME_MESSAGE,
             state=WritingChatStateEnum.WELCOME_MESSAGE,
         )
+        await send_message_and_change_state(
+            connections=connections,
+            chat=chat,
+            message_text=writing_state_strings.WRITING_ASK_THEME,
+            state=WritingChatStateEnum.ASK_THEME,
+        )
 
     async def handle_message(self, chat: ChatSchema, message: MessageSchema, connections) -> None:
         """
@@ -57,36 +63,6 @@ class WritingChatStateHandler:
         method = self.state_methods.get(chat.chat_state)
         if method:
             await method(chat, message, connections)
-
-    @staticmethod
-    async def _writing_welcome_message(chat: ChatSchema, message: MessageSchema, connections) -> None:
-        """
-        Обработчик для состояния чата `WELCOME_MESSAGE`. Используется ai, чтобы определить цель ответа.
-
-        :param chat: Чат пользователя.
-        :param message: Сообщение, отправленное пользователем.
-        :param connections: Список подключений по websocket.
-        """
-        answer = process_user_message_on_welcome_message_status(message.text)
-        if not answer:
-            await repeat_state_message(
-                connections=connections,
-                chat=chat,
-                message_text=writing_state_strings.WRITING_WELCOME_MESSAGE,
-            )
-        elif answer == "Survey":
-            await send_message_and_change_state(
-                connections=connections,
-                chat=chat,
-                message_text=writing_state_strings.WRITING_ASK_THEME,
-                state=WritingChatStateEnum.ASK_THEME,
-            )
-        elif answer == "File":
-            await repeat_state_message(
-                connections=connections,
-                chat=chat,
-                message_text=strings.NOT_YET_MESSAGE,
-            )
 
     @staticmethod
     async def _writing_ask_theme(chat: ChatSchema, message, connections) -> None:

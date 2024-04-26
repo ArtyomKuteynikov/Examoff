@@ -109,6 +109,8 @@ class ConnectionManager:
             chat_id: int,
             message: WebsocketMessageData,
     ):
+        return
+        #todo пофиксить баг
         message_to_send = message
         for connect in self.connections[chat_id]:
             if connect == websocket:

@@ -13,6 +13,215 @@ from test_case_from_prompt_engineer.document import init_styles, write_chapter
 load_dotenv()
 
 
+def func_to_generate_plan(client, messages, func_count=0):
+    if func_count != 0:
+        print(func_count, 'func_to_generate_plan. func_count')
+    if func_count == 10:
+        return None
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4-turbo",
+            response_format={"type": "json_object"},
+            messages=messages,
+        )
+
+        plan = json.loads(response.choices[0].message.content)
+
+        elements_counter = 0
+        for element in plan:
+            if element.startswith("Element-"):
+                elements_counter += 1
+                if not plan[element]['Name']:
+                    raise
+                if not plan[element]['Character capacity']:
+                    raise
+
+        if elements_counter < 3:
+            raise
+
+        return plan
+    except Exception:
+        func_to_generate_plan(client, messages, func_count + 1)
+
+
+#
+# def func_to_next_generate_chapter(
+#         client,
+#         element_name,
+#         element_num,
+#         chapter_capacity,
+#         user_chapter_prompt,
+#         generations,
+#         plan,
+#         chapter,
+#         func_count=0,
+# ):
+#     if func_count != 0:
+#         print(func_count, 'chapter_generation. func_count')
+#     if func_count == 10:
+#         return None
+#     try:
+#         user_generation_prompt = promts.GENERATOR_PROMPT.format(
+#             ELEMENT_NAME=element_name,
+#             ELEMENT_NUM=element_num,
+#             CHAR_CAPPACITY=chapter_capacity,
+#         )
+#         messages = [
+#             {"role": "system", "content": f"{promts.GENERAL_PROMPT}"},
+#             {"role": "user", "content": f"Plan: ```\n{plan}\n```"},
+#             {"role": "user", "content": f"{user_chapter_prompt}"},
+#             {"role": "assistant", "content": f"{chapter}"},
+#             {"role": "user", "content": f"{user_generation_prompt}"},
+#             *generations
+#         ]
+#         response = client.chat.completions.create(
+#             model="gpt-4-turbo",
+#             response_format={"type": "json_object"},
+#             messages=messages,
+#         )
+#         next_gen = json.loads(response.choices[0].message.content)
+#         generation_text = next_gen['Content']
+#
+#         generations.extend([
+#             {"role": "assistant", "content": f"{next_gen}"},
+#             {"role": "user", "content": f"{user_generation_prompt}"},
+#         ])
+#         return generation_text
+#     except Exception:
+#         func_to_next_generate_chapter(client, messages, func_count + 1)
+#
+#
+def func_to_generate_chapter(
+        client,
+        messages,
+        chapter_capacity,
+        element_name,
+        element_num,
+        user_chapter_prompt,
+        plan,
+        func_count=0,
+):
+    generation_text = ''
+
+    if func_count != 0:
+        print(func_count, 'func_to_generate_chapter. func_count')
+    if func_count == 10:
+        return None
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4-turbo",
+            response_format={"type": "json_object"},
+            messages=messages,
+        )
+        chapter = json.loads(response.choices[0].message.content)
+        generation_text += chapter['Content']
+
+        generations = []
+        while len(generation_text) < chapter_capacity:
+            rep = func_to_next_generate_chapter(
+                client=client,
+                element_name=element_name,
+                element_num=element_num,
+                chapter_capacity=chapter_capacity,
+                user_chapter_prompt=user_chapter_prompt,
+                generations=generations,
+                plan=plan,
+                chapter=chapter,
+            )
+            if rep:
+                generation_text += rep
+            else:
+                return generation_text
+
+        return generation_text
+    except Exception:
+        func_to_generate_chapter(
+            client,
+            messages,
+            chapter_capacity,
+            element_name,
+            element_num,
+            user_chapter_prompt,
+            plan, func_count + 1
+        )
+
+
+def func_to_next_generate_chapter(
+        client,
+        element_name,
+        element_num,
+        chapter_capacity,
+        user_chapter_prompt,
+        generations,
+        plan,
+        chapter,
+        generation_text='',
+        func_count=0,
+):
+    if func_count != 0:
+        print(func_count, 'chapter_generation. func_count')
+    if func_count == 10:
+        return None
+
+    try:
+        user_generation_prompt = promts.GENERATOR_PROMPT.format(
+            ELEMENT_NAME=element_name,
+            ELEMENT_NUM=element_num,
+            CHAR_CAPPACITY=chapter_capacity,
+        )
+        messages = [
+            {"role": "system", "content": f"{promts.GENERAL_PROMPT}"},
+            {"role": "user", "content": f"Plan: ```\n{plan}\n```"},
+            {"role": "user", "content": f"{user_chapter_prompt}"},
+            {"role": "assistant", "content": f"{chapter}"},
+            {"role": "user", "content": f"{user_generation_prompt}"},
+            *generations
+        ]
+        response = client.chat.completions.create(
+            model="gpt-4-turbo",
+            response_format={"type": "json_object"},
+            messages=messages,
+        )
+        next_gen = json.loads(response.choices[0].message.content)
+        generation_text += next_gen['Content']
+
+        generations.extend([
+            {"role": "assistant", "content": f"{next_gen}"},
+            {"role": "user", "content": f"{user_generation_prompt}"},
+        ])
+
+        if len(generation_text) < chapter_capacity:
+            return func_to_next_generate_chapter(
+                client,
+                element_name,
+                element_num,
+                chapter_capacity,
+                user_chapter_prompt,
+                generations,
+                plan,
+                chapter,
+                generation_text,
+                func_count
+            )
+        else:
+            return generation_text
+    except Exception as e:
+        print("Error encountered:", str(e))
+        return func_to_next_generate_chapter(
+            client,
+            element_name,
+            element_num,
+            chapter_capacity,
+            user_chapter_prompt,
+            generations,
+            plan,
+            chapter,
+            generation_text,
+            func_count + 1
+        )
+
+
 class OpenAIUtilities(unittest.TestCase):
     def __init__(self, method_name='runTest'):
         super().__init__(method_name)
@@ -85,13 +294,8 @@ class OpenAIUtilities(unittest.TestCase):
                 {"role": "system", "content": f"{promts.GENERAL_PROMPT}"},
                 {"role": "user", "content": f"{user_prompt}"}
             ]
-            response = self.client.chat.completions.create(
-                model="gpt-4-turbo",
-                response_format={"type": "json_object"},
-                messages=messages,
-            )
 
-            plan = json.loads(response.choices[0].message.content)
+            plan = func_to_generate_plan(client=self.client, messages=messages)
 
             elements_counter = 0
             for element in plan:
@@ -113,7 +317,7 @@ class OpenAIUtilities(unittest.TestCase):
 
         for element in plan:
             if element.startswith("Element-"):
-                generation_text = ''
+                print(f'Stage 1. {element}')
 
                 user_chapter_prompt = promts.CHAPTER_PROMPT.format(
                     TYPE=self.user_requirements['TYPE'],
@@ -126,48 +330,20 @@ class OpenAIUtilities(unittest.TestCase):
                     {"role": "user", "content": f"Plan: ```\n{self.example_plan}\n```"},
                     {"role": "user", "content": f"{user_chapter_prompt}"}
                 ]
-                response = self.client.chat.completions.create(
-                    model="gpt-4-turbo",
-                    response_format={"type": "json_object"},
+
+                generation_text = func_to_generate_chapter(
+                    client=self.client,
                     messages=messages,
+                    element_name=plan[element]['Name'],
+                    element_num=element[8:],
+                    chapter_capacity=plan[element]['Character capacity'],
+                    user_chapter_prompt=user_chapter_prompt,
+                    plan=self.example_plan,
                 )
-                chapter = json.loads(response.choices[0].message.content)
-                print(f'chapter = {chapter}')
-                generation_text += chapter['Content']
-
-                generations = []
-                print(f"generation_text: {generation_text}")
-                while len(generation_text) < plan[element]['Character capacity']:
-                    user_generation_prompt = promts.GENERATOR_PROMPT.format(
-                        ELEMENT_NAME=plan[element]['Name'],
-                        ELEMENT_NUM=element[8:],
-                        CHAR_CAPPACITY=plan[element]['Character capacity'],
-                    )
-                    messages = [
-                        {"role": "system", "content": f"{promts.GENERAL_PROMPT}"},
-                        {"role": "user", "content": f"Plan: ```\n{self.example_plan}\n```"},
-                        {"role": "user", "content": f"{user_chapter_prompt}"},
-                        {"role": "assistant", "content": f"{chapter}"},
-                        {"role": "user", "content": f"{user_generation_prompt}"},
-                        *generations
-                    ]
-                    print(f"messages", messages)
-                    response = self.client.chat.completions.create(
-                        model="gpt-4-turbo",
-                        response_format={"type": "json_object"},
-                        messages=messages,
-                    )
-                    next_gen = json.loads(response.choices[0].message.content)
-                    print(f'next_gen = {next_gen}')
-                    generation_text += next_gen['Content']
-
-                    generations.extend([
-                        {"role": "assistant", "content": f"{next_gen}"},
-                        {"role": "user", "content": f"{user_generation_prompt}"},
-                    ])
-
-                write_chapter(doc, plan[element]['Name'], generation_text, 1)
-                break
+                if generation_text is not None:
+                    write_chapter(doc, plan[element]['Name'], generation_text, 1)
+                else:
+                    print(f"Failed to generate chapter for {element} after multiple retries.")
 
         doc.save('document.docx')
 
