@@ -56,6 +56,7 @@ class File(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4,
                           editable=False)  # Уникальный идентификатор и название файла
     user_id = models.IntegerField()  # ID пользователя, который может скачать файл
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, verbose_name="Чат")
 
     class Meta:
         db_table = 'files'  # Указание имени таблицы

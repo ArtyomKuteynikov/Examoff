@@ -22,6 +22,7 @@ class FileRepo:
             model_data={
                 "id": file_in_creation.id,
                 "user_id": file_in_creation.user_id,
+                "chat_id": file_in_creation.chat_id,
             }
         )
         return await self.get_file_by_id(file_row.id)
@@ -35,6 +36,7 @@ class FileRepo:
         return FileSchema(
             id=file.id,
             user_id=file.user_id,
+            chat_id=file.chat_id,
         )
 
     async def get_files_by_user_id(self, user_id: int) -> List[FileSchema]:
@@ -44,6 +46,20 @@ class FileRepo:
         )
         files = result.scalars().all()
         return [FileSchema.model_validate(file) for file in files]
+
+    async def get_file_by_chat_id(self, chat_id: int) -> FileSchema:
+        """Retrieve files by user_id."""
+        result = await self._session.execute(
+            select(File).where(File.chat_id == chat_id)
+        )
+        file = result.scalars().unique().first()
+        if not file:
+            return None
+        return FileSchema(
+            id=file.id,
+            user_id=file.user_id,
+            chat_id=file.chat_id,
+        )
 
     async def delete_file(self, file_id: uuid.UUID) -> None:
         """Delete a file."""

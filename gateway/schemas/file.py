@@ -20,6 +20,7 @@ class FileSchema(BaseModel):
 
     id: uuid.UUID
     user_id: int
+    chat_id: int
 
 
 class FileCreateSchema(BaseModel):
@@ -38,3 +39,4 @@ class FileCreateSchema(BaseModel):
     """
     id: uuid.UUID = Field(default_factory=uuid.uuid4)
     user_id: int
+    chat_id: int

@@ -361,3 +361,21 @@ async def download_file(file_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
         return FileResponse(path=file_path, filename=str(file_data.id)+'.docx', media_type='application/octet-stream')
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="File not found on server")
+
+@app.get("/files/", response_class=FileResponse)
+async def git_file_id_by_chat(chat_id: int, db: AsyncSession = Depends(get_db)):
+    """
+    Download a file by its UUID.
+
+    This endpoint will retrieve the file if the file with the given UUID exists and the user has permissions to access it.
+    """
+    file_repo = FileRepo(db)
+    file_data: FileSchema = await file_repo.get_file_by_chat_id(chat_id)
+    if not file_data:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    file_path = f"files/{file_data.id}.docx"
+    try:
+        return FileResponse(path=file_path, filename=str(file_data.id)+'.docx', media_type='application/octet-stream')
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="File not found on server")
