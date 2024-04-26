@@ -1,4 +1,6 @@
 """Обработчик состояний чата для заказа диплома."""
+import uuid
+
 from ai_module.openai_utilities.document_structure import generate_test_structure
 from ai_module.openai_utilities.message_handler import handle_question_ask_work_size
 from ai_module.openai_utilities.plan import generate_plan_via_chat, get_work_plan_from_db
@@ -7,11 +9,14 @@ from gateway.chat.dependens.answers import send_message_and_change_state, repeat
 from gateway.chat.processing_message.diploma import process_user_message_on_welcome_message_status, \
     process_user_message_on_ask_work_size_status, generate_user_plan, process_user_message_on_ask_accept_plan_status
 from gateway.config.database import async_session_maker
+from gateway.db.files.models import File
+from gateway.db.files.repo import FileRepo
 from gateway.db.messages.repo import MessageRepo
 from gateway.resources import strings
 from gateway.resources.chat_state_strings import diploma_state_strings
 from gateway.schemas.chat import ChatSchema
 from gateway.schemas.enums import DiplomaChatStateEnum, ChatTypeTranslate
+from gateway.schemas.file import FileCreateSchema
 from gateway.schemas.message import MessageSchema
 
 
@@ -238,12 +243,10 @@ class DiplomaChatStateHandler:
                 state=DiplomaChatStateEnum.ASK_ACCEPT_TEXT_STRUCTURE,
             )
 
-
         elif message.text == 'Нет, не согласен':
             await self._diploma_ask_any_information(chat, message, connections)
 
-    @staticmethod
-    async def _diploma_ask_accept_text_structure(chat: ChatSchema, message, connections) -> None:
+    async def _diploma_ask_accept_text_structure(self, chat: ChatSchema, message, connections) -> None:
         """
         Обработчик для состояния чата `ASK_ACCEPT_TEXT_STRUCTURE`.
 
@@ -251,12 +254,39 @@ class DiplomaChatStateHandler:
         :param message: Сообщение, отправленное пользователем.
         :param connections: Список подключений по websocket.
         """
-        await send_message_and_change_state(
-            connections=connections,
-            chat=chat,
-            message_text=diploma_state_strings.DIPLOMA_DIALOG_IS_OVER,
-            state=DiplomaChatStateEnum.DIALOG_IS_OVER,
-        )
+        if message.text not in ["Да, согласен", "Нет, не согласен"]:
+            message.text = 'Да, согласен'
+            await self._diploma_ask_accept_plan(chat, message, connections)
+
+        elif message.text == 'Да, согласен':
+            file_uuid = uuid.uuid4()
+            file_location = f"files/{file_uuid}.docx"
+            with open(file_location, "w") as file_object:
+                file_object.write('test')
+
+            # Сохранение информации о файле в базу данных
+            db_file = FileCreateSchema(
+                id=file_uuid,
+                user_id=chat.user_owner_id,
+                chat_id=chat.id,
+            )
+
+            async with async_session_maker() as session:
+                repo = FileRepo(session=session)
+                await repo.create_file(db_file)
+            await send_message_and_change_state(
+                connections=connections,
+                chat=chat,
+                message_text=f'{file_uuid}',
+                state=DiplomaChatStateEnum.DIALOG_IS_OVER,
+            )
+
+        # await send_message_and_change_state(
+        #     connections=connections,
+        #     chat=chat,
+        #     message_text=diploma_state_strings.DIPLOMA_DIALOG_IS_OVER,
+        #     state=DiplomaChatStateEnum.DIALOG_IS_OVER,
+        # )
 
     @staticmethod
     async def _diploma_dialog_is_over(chat: ChatSchema, message, connections) -> None:

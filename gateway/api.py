@@ -4,7 +4,7 @@ import uuid
 
 from dotenv import load_dotenv
 from redis import asyncio as aioredis
-from fastapi import FastAPI, Request, Depends
+from fastapi import FastAPI, Request, Depends, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
@@ -358,12 +358,13 @@ async def download_file(file_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
 
     file_path = f"files/{file_data.id}.docx"
     try:
-        return FileResponse(path=file_path, filename=str(file_data.id)+'.docx', media_type='application/octet-stream')
+        return FileResponse(path=file_path, filename=str(file_data.id) + '.docx', media_type='application/octet-stream')
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="File not found on server")
 
+
 @app.get("/files/", response_class=FileResponse)
-async def git_file_id_by_chat(chat_id: int, db: AsyncSession = Depends(get_db)):
+async def get_file_id_by_chat(chat_id: int, db: AsyncSession = Depends(get_db)):
     """
     Download a file by its UUID.
 
@@ -376,6 +377,6 @@ async def git_file_id_by_chat(chat_id: int, db: AsyncSession = Depends(get_db)):
 
     file_path = f"files/{file_data.id}.docx"
     try:
-        return FileResponse(path=file_path, filename=str(file_data.id)+'.docx', media_type='application/octet-stream')
+        return FileResponse(path=file_path, filename=str(file_data.id) + '.docx', media_type='application/octet-stream')
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="File not found on server")
