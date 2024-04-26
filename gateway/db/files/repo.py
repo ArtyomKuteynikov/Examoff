@@ -33,6 +33,8 @@ class FileRepo:
             select(File).where(File.id == file_id)
         )
         file = result.scalars().unique().first()
+        if not file:
+            return None
         return FileSchema(
             id=file.id,
             user_id=file.user_id,
