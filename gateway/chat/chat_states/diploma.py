@@ -1,7 +1,8 @@
 """Обработчик состояний чата для заказа диплома."""
+import json
 import uuid
 
-from ai_module.openai_utilities.document_structure import generate_test_structure
+from ai_module.openai_utilities.document_structure import generate_test_structure, generate_document
 from ai_module.openai_utilities.message_handler import handle_question_ask_work_size
 from ai_module.openai_utilities.plan import generate_plan_via_chat, get_work_plan_from_db
 from gateway.chat.dependens.answers import send_message_and_change_state, repeat_state_message, \
@@ -15,9 +16,10 @@ from gateway.db.messages.repo import MessageRepo
 from gateway.resources import strings
 from gateway.resources.chat_state_strings import diploma_state_strings
 from gateway.schemas.chat import ChatSchema
-from gateway.schemas.enums import DiplomaChatStateEnum, ChatTypeTranslate
+from gateway.schemas.enums import DiplomaChatStateEnum, ChatTypeTranslate, WebsocketMessageType
 from gateway.schemas.file import FileCreateSchema
 from gateway.schemas.message import MessageSchema
+from gateway.schemas.websocket_data import WebsocketMessageData, websocket_message_data_to_websocket_format
 
 
 class DiplomaChatStateHandler:
@@ -238,10 +240,10 @@ class DiplomaChatStateHandler:
                 chat=chat,
                 message_text=diploma_state_strings.DIPLOMA_ASK_ACCEPT_TEXT_STRUCTURE.format(
                     text_structure=text_structure
-
                 ),
                 state=DiplomaChatStateEnum.ASK_ACCEPT_TEXT_STRUCTURE,
             )
+            await send_ask_accept_work_plan_buttons(connections, chat)
 
         elif message.text == 'Нет, не согласен':
             await self._diploma_ask_any_information(chat, message, connections)
@@ -254,15 +256,20 @@ class DiplomaChatStateHandler:
         :param message: Сообщение, отправленное пользователем.
         :param connections: Список подключений по websocket.
         """
+        plan = eval(await get_work_plan_from_db(chat))
         if message.text not in ["Да, согласен", "Нет, не согласен"]:
             message.text = 'Да, согласен'
             await self._diploma_ask_accept_plan(chat, message, connections)
 
         elif message.text == 'Да, согласен':
             file_uuid = uuid.uuid4()
-            file_location = f"files/{file_uuid}.docx"
-            with open(file_location, "w") as file_object:
-                file_object.write('test')
+
+            await repeat_state_message(
+                connections=connections,
+                chat=chat,
+                message_text='Идет генерация документа. Не закрывайте окно!',
+            )
+            await generate_document(file_uuid, plan)
 
             # Сохранение информации о файле в базу данных
             db_file = FileCreateSchema(
@@ -274,19 +281,27 @@ class DiplomaChatStateHandler:
             async with async_session_maker() as session:
                 repo = FileRepo(session=session)
                 await repo.create_file(db_file)
+
             await send_message_and_change_state(
                 connections=connections,
                 chat=chat,
-                message_text=f'{file_uuid}',
-                state=DiplomaChatStateEnum.DIALOG_IS_OVER,
+                message_text=diploma_state_strings.DIPLOMA_DIALOG_IS_OVER,
+                state=DiplomaChatStateEnum.ASK_ACCEPT_TEXT_STRUCTURE,
             )
 
-        # await send_message_and_change_state(
-        #     connections=connections,
-        #     chat=chat,
-        #     message_text=diploma_state_strings.DIPLOMA_DIALOG_IS_OVER,
-        #     state=DiplomaChatStateEnum.DIALOG_IS_OVER,
-        # )
+            websocket_message = WebsocketMessageData(
+                message_type=WebsocketMessageType.SYSTEM_MESSAGE,
+                data={
+                    "file": f'{file_uuid}',
+                },
+            )
+            for connect in connections[chat.id]:
+                data = websocket_message_data_to_websocket_format(websocket_message)
+                await connect.send_text(data)
+
+        elif message.text == 'Нет, не согласен':
+            message.text = "Да, согласен",
+            await self._diploma_ask_accept_plan(chat, message, connections)
 
     @staticmethod
     async def _diploma_dialog_is_over(chat: ChatSchema, message, connections) -> None:
@@ -297,4 +312,8 @@ class DiplomaChatStateHandler:
         :param message: Сообщение, отправленное пользователем.
         :param connections: Список подключений по websocket.
         """
-        # todo
+        await repeat_state_message(
+            connections=connections,
+            chat=chat,
+            message_text='Работа завершена. Если хотите начать заново, начните новый заказ.',
+        )
