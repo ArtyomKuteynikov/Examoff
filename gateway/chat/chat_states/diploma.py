@@ -298,7 +298,7 @@ class DiplomaChatStateHandler:
             for connect in connections[chat.id]:
                 data = websocket_message_data_to_websocket_format(websocket_message)
                 await connect.send_text(data)
-            await create_system_message_in_db(chat, str({file_uuid}), response_specific_state='file')
+            await create_system_message_in_db(chat, str(file_uuid), response_specific_state='file')
 
         elif message.text == 'Нет, не согласен':
             message.text = "Да, согласен",
