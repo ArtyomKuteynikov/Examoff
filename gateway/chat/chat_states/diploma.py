@@ -203,7 +203,7 @@ class DiplomaChatStateHandler:
         :param connections: Список подключений по websocket.
         """
         if message.text not in ["Да, согласен", "Нет, не согласен"]:
-            plan = await get_work_plan_from_db(chat)
+            plan = eval(await get_work_plan_from_db(chat))
             plan_structure = ''
             for element in plan:
                 if element.startswith("Element-"):
