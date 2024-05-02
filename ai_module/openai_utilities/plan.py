@@ -3,7 +3,7 @@ import json
 import os
 
 from dotenv import load_dotenv
-from openai import OpenAI
+from openai import OpenAI, AsyncOpenAI
 
 from ai_module.schemas.enums import GPT_Model
 from ai_module.schemas.message import UserMessage, SystemMessage, messages_to_openai_format
@@ -14,7 +14,7 @@ from gateway.schemas.enums import ChatTypeTranslate
 from test_case_from_prompt_engineer import promts
 
 load_dotenv()
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", "OPENAI_API_KEY is empty"))
+client = AsyncOpenAI(api_key=os.environ.get("OPENAI_API_KEY", "OPENAI_API_KEY is empty"))
 
 
 async def generate_plan_via_chat(chat: ChatSchema):
@@ -29,7 +29,7 @@ async def generate_plan_via_chat(chat: ChatSchema):
         work_size = eval(messages['JSON_WORK_SIZE'].text)
         theme = messages['ask_theme'].text
         work_type = ChatTypeTranslate[chat.chat_type].value
-        return generate_plan(
+        return await generate_plan(
             theme=theme,
             work_type=work_type,
             work_size_min=work_size['Минимальный объем символов'],
@@ -37,7 +37,7 @@ async def generate_plan_via_chat(chat: ChatSchema):
         )
 
 
-def generate_plan(theme, work_type, work_size_min, work_size_max, func_count=0):
+async def generate_plan(theme, work_type, work_size_min, work_size_max, func_count=0):
     if func_count == 10:
         return None
 
@@ -52,7 +52,7 @@ def generate_plan(theme, work_type, work_size_min, work_size_max, func_count=0):
         UserMessage(content=user_prompt),
     ]
 
-    completion = client.chat.completions.create(
+    completion = await client.chat.completions.create(
         model=GPT_Model.GPT_4_TURBO,
         messages=messages_to_openai_format(messages),
         response_format={"type": "json_object"},
@@ -75,7 +75,7 @@ def generate_plan(theme, work_type, work_size_min, work_size_max, func_count=0):
 
         return plan
     except Exception:
-        return generate_plan(theme, work_type, work_size_min, work_size_max, func_count + 1)
+        return await generate_plan(theme, work_type, work_size_min, work_size_max, func_count + 1)
 
 
 async def get_work_plan_from_db(chat: ChatSchema):

@@ -5,7 +5,7 @@ import os
 
 from docx import Document
 from dotenv import load_dotenv
-from openai import OpenAI
+from openai import AsyncOpenAI
 
 from ai_module.document_creator.document import init_styles, write_chapter
 from ai_module.schemas.enums import GPT_Model
@@ -18,7 +18,7 @@ from gateway.resources import strings
 from test_case_from_prompt_engineer import promts
 
 load_dotenv()
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", "OPENAI_API_KEY is empty"))
+client = AsyncOpenAI(api_key=os.environ.get("OPENAI_API_KEY", "OPENAI_API_KEY is empty"))
 
 
 async def generate_test_structure(type_work, plan, func_count=0):
@@ -37,7 +37,7 @@ async def generate_test_structure(type_work, plan, func_count=0):
             {"role": "user", "content": f"{user_chapter_prompt}"}
         ]
 
-        response = client.chat.completions.create(
+        response = await client.chat.completions.create(
             model="gpt-4-turbo",
             response_format={"type": "json_object"},
             messages=messages,
@@ -72,7 +72,7 @@ async def generate_text_for_chapter(
         {"role": "user", "content": f"{user_chapter_prompt}"}
     ]
 
-    response = client.chat.completions.create(
+    response = await client.chat.completions.create(
         model="gpt-4-turbo",
         response_format={"type": "json_object"},
         messages=messages,
