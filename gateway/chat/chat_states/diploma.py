@@ -302,7 +302,7 @@ class DiplomaChatStateHandler:
                 await connect.send_text(data)
 
         elif message.text == 'Нет, не согласен':
-            message.text = "Да, согласен",
+            message.text = "Да, согласен"
             await self._diploma_ask_accept_plan(chat, message, connections)
 
     @staticmethod
