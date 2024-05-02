@@ -52,9 +52,12 @@ async def send_message_in_websockets(connections, chat: ChatSchema, message_text
         },
     )
     # Отправка только по каналам, что относятся к чату.
-    for connect in connections[chat.id]:
-        data = websocket_message_data_to_websocket_format(websocket_message)
-        await connect.send_text(data)
+    try:
+        for connect in connections[chat.id]:
+            data = websocket_message_data_to_websocket_format(websocket_message)
+            await connect.send_text(data)
+    except Exception as e:
+        print(e)
 
 
 async def send_message_and_change_state(connections, chat: ChatSchema, message_text: str, state) -> None:
