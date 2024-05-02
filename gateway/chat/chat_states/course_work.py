@@ -234,7 +234,7 @@ class CourseWorkChatStateHandler:
                 connections=connections,
                 chat=chat,
                 message_text=course_work_state_strings.COURSE_WORK_ASK_ACCEPT_TEXT_STRUCTURE.format(
-                    text_structure=text_structure
+                    course_work_text_structure=text_structure
                 ),
                 state=CourseWorkChatStateEnum.ASK_ACCEPT_TEXT_STRUCTURE,
             )
