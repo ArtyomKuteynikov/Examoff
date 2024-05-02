@@ -246,6 +246,7 @@ class DiplomaChatStateHandler:
             await send_ask_accept_work_plan_buttons(connections, chat)
 
         elif message.text == 'Нет, не согласен':
+            message.text = 'Да, согласен'
             await self._diploma_ask_any_information(chat, message, connections)
 
     async def _diploma_ask_accept_text_structure(self, chat: ChatSchema, message, connections) -> None:
@@ -286,9 +287,10 @@ class DiplomaChatStateHandler:
                 connections=connections,
                 chat=chat,
                 message_text=diploma_state_strings.DIPLOMA_DIALOG_IS_OVER,
-                state=DiplomaChatStateEnum.ASK_ACCEPT_TEXT_STRUCTURE,
+                state=DiplomaChatStateEnum.DIALOG_IS_OVER,
             )
 
+            await create_system_message_in_db(chat, str(file_uuid), response_specific_state='file')
             websocket_message = WebsocketMessageData(
                 message_type=WebsocketMessageType.SYSTEM_MESSAGE,
                 data={
@@ -298,7 +300,6 @@ class DiplomaChatStateHandler:
             for connect in connections[chat.id]:
                 data = websocket_message_data_to_websocket_format(websocket_message)
                 await connect.send_text(data)
-            await create_system_message_in_db(chat, str(file_uuid), response_specific_state='file')
 
         elif message.text == 'Нет, не согласен':
             message.text = "Да, согласен",
