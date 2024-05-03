@@ -1,4 +1,5 @@
 """Обработчик состояний чата для заказа домашнего задания."""
+from ai_module.openai_utilities.message_handler import handle_question_ask_work_size
 from gateway.chat.dependens.answers import send_message_and_change_state, repeat_state_message, \
     create_system_message_in_db, send_message_in_websockets
 from gateway.chat.processing_message.diploma import process_user_message_on_welcome_message_status, \
@@ -20,7 +21,6 @@ class HomeworkChatStateHandler:
         Для каждого состояние чата свой сценарий взаимодействия.
         """
         self.state_methods = {
-            HomeworkChatStateEnum.WELCOME_MESSAGE: self._homework_welcome_message,
             HomeworkChatStateEnum.ASK_THEME: self._homework_ask_theme,
             HomeworkChatStateEnum.ASK_WORK_SIZE: self._homework_ask_work_size,
             HomeworkChatStateEnum.ASK_OTHER_REQUIREMENTS: self._homework_ask_other_requirements,
@@ -88,18 +88,21 @@ class HomeworkChatStateHandler:
         :param message: Сообщение, отправленное пользователем.
         :param connections: Список подключений по websocket.
         """
-        answer = process_user_message_on_ask_work_size_status(message.text)
+        answer = handle_question_ask_work_size(message.text)
         if not answer:
             await repeat_state_message(
                 connections=connections,
                 chat=chat,
-                message_text=strings.HOMEWORK_ASK_WORK_SIZE,
+                message_text=diploma_state_strings.DIPLOMA_ASK_WORK_SIZE,
             )
         elif answer:
+            await create_system_message_in_db(
+                chat=chat, text=str(answer), response_specific_state='JSON_WORK_SIZE'
+            )
             await send_message_and_change_state(
                 connections=connections,
                 chat=chat,
-                message_text=strings.HOMEWORK_ASK_OTHER_REQUIREMENTS,
+                message_text=diploma_state_strings.DIPLOMA_ASK_OTHER_REQUIREMENTS,
                 state=HomeworkChatStateEnum.ASK_OTHER_REQUIREMENTS,
             )
 

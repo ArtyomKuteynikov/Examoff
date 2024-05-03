@@ -1,13 +1,20 @@
 """Обработчик состояний чата для заказа контрольной работы."""
+import uuid
+
+from ai_module.openai_utilities.document_structure import generate_test_structure, generate_document
+from ai_module.openai_utilities.message_handler import handle_question_ask_work_size
+from ai_module.openai_utilities.plan import generate_plan_via_chat, get_work_plan_from_db
 from gateway.chat.dependens.answers import send_message_and_change_state, repeat_state_message, \
-    create_system_message_in_db, send_message_in_websockets
-from gateway.chat.processing_message.diploma import process_user_message_on_welcome_message_status, \
-    process_user_message_on_ask_work_size_status, generate_user_plan, process_user_message_on_ask_accept_plan_status
+    create_system_message_in_db, send_message_in_websockets, send_ask_accept_work_plan_buttons
+from gateway.config.database import async_session_maker
+from gateway.db.files.repo import FileRepo
 from gateway.resources import strings
 from gateway.resources.chat_state_strings import control_work_state_strings
 from gateway.schemas.chat import ChatSchema
-from gateway.schemas.enums import ControlWorkChatStateEnum
+from gateway.schemas.enums import ControlWorkChatStateEnum, ChatTypeTranslate, WebsocketMessageType
+from gateway.schemas.file import FileCreateSchema
 from gateway.schemas.message import MessageSchema
+from gateway.schemas.websocket_data import WebsocketMessageData, websocket_message_data_to_websocket_format
 
 
 class ControlWorkChatStateHandler:
@@ -88,28 +95,23 @@ class ControlWorkChatStateHandler:
         :param message: Сообщение, отправленное пользователем.
         :param connections: Список подключений по websocket.
         """
-        # answer = process_user_message_on_ask_work_size_status(message.text)
-        # if not answer:
-        #     await repeat_state_message(
-        #         connections=connections,
-        #         chat=chat,
-        #         message_text=control_work_state_strings.CONTROL_WORK_ASK_WORK_SIZE,
-        #     )
-        # elif answer:
-        #     await send_message_and_change_state(
-        #         connections=connections,
-        #         chat=chat,
-        #         message_text=control_work_state_strings.CONTROL_WORK_ASK_OTHER_REQUIREMENTS,
-        #         state=ControlWorkChatStateEnum.ASK_OTHER_REQUIREMENTS,
-        #     )
-        # todo Добавить обработчик сообщения
-
-        await send_message_and_change_state(
-            connections=connections,
-            chat=chat,
-            message_text=control_work_state_strings.CONTROL_WORK_ASK_OTHER_REQUIREMENTS,
-            state=ControlWorkChatStateEnum.ASK_OTHER_REQUIREMENTS,
-        )
+        answer = handle_question_ask_work_size(message.text)
+        if not answer:
+            await repeat_state_message(
+                connections=connections,
+                chat=chat,
+                message_text=control_work_state_strings.CONTROL_WORK_ASK_WORK_SIZE,
+            )
+        elif answer:
+            await create_system_message_in_db(
+                chat=chat, text=str(answer), response_specific_state='JSON_WORK_SIZE'
+            )
+            await send_message_and_change_state(
+                connections=connections,
+                chat=chat,
+                message_text=control_work_state_strings.CONTROL_WORK_ASK_OTHER_REQUIREMENTS,
+                state=ControlWorkChatStateEnum.ASK_OTHER_REQUIREMENTS,
+            )
 
     @staticmethod
     async def _control_work_ask_other_requirements(chat: ChatSchema, message, connections) -> None:
@@ -152,15 +154,40 @@ class ControlWorkChatStateHandler:
         :param message: Сообщение, отправленное пользователем.
         :param connections: Список подключений по websocket.
         """
-        control_work_plan = await generate_user_plan(chat.id)
+        await repeat_state_message(
+            connections=connections,
+            chat=chat,
+            message_text='Идет генерация плана...',
+        )
+
+        plan = await generate_plan_via_chat(chat)
+        if not plan:
+            await send_message_and_change_state(
+                connections=connections,
+                chat=chat,
+                message_text='Произошла ошибка генерации. Создайте заказ заново.',
+                state=ControlWorkChatStateEnum.ASK_ANY_INFORMATION,
+            )
+            return
+
+        await create_system_message_in_db(
+            chat=chat, text=str(plan), response_specific_state='JSON_PLAN'
+        )
+
+        plan_structure = ''
+        for element in plan:
+            if element.startswith("Element-"):
+                plan_structure += plan[element]['Name'] + '\n'
+
         await send_message_and_change_state(
             connections=connections,
             chat=chat,
             message_text=control_work_state_strings.CONTROL_WORK_ASK_ACCEPT_PLAN.format(
-                control_work_plan=control_work_plan,
+                control_work_plan=plan_structure
             ),
             state=ControlWorkChatStateEnum.ASK_ACCEPT_PLAN,
         )
+        await send_ask_accept_work_plan_buttons(connections, chat)
 
     async def _control_work_ask_accept_plan(self, chat: ChatSchema, message, connections) -> None:
         """
@@ -170,28 +197,54 @@ class ControlWorkChatStateHandler:
         :param message: Сообщение, отправленное пользователем.
         :param connections: Список подключений по websocket.
         """
-        # todo Добавить обработчик сообщения
-        # answer = process_user_message_on_ask_accept_plan_status(message.text)
-        # if not answer:
-        #     await self._control_work_ask_any_information(chat, message, connections)
-        # elif answer:
-        #     await send_message_and_change_state(
-        #         connections=connections,
-        #         chat=chat,
-        #         message_text="todo",
-        #         state=ControlWorkChatStateEnum.ASK_ACCEPT_TEXT_STRUCTURE,
-        #     )
-        await send_message_and_change_state(
-            connections=connections,
-            chat=chat,
-            message_text=control_work_state_strings.CONTROL_WORK_ASK_ACCEPT_TEXT_STRUCTURE.format(
-                control_work_text_structure='control_work_text_structure',
-            ),
-            state=ControlWorkChatStateEnum.ASK_ACCEPT_TEXT_STRUCTURE,
-        )
+        if message.text not in ["Да, согласен", "Нет, не согласен"]:
+            plan = eval(await get_work_plan_from_db(chat))
+            plan_structure = ''
+            for element in plan:
+                if element.startswith("Element-"):
+                    plan_structure += plan[element]['Name'] + '\n'
 
-    @staticmethod
-    async def _control_work_ask_accept_text_structure(chat: ChatSchema, message, connections) -> None:
+            await send_message_and_change_state(
+                connections=connections,
+                chat=chat,
+                message_text=control_work_state_strings.CONTROL_WORK_ASK_ACCEPT_PLAN.format(
+                    control_work_plan=plan_structure
+                ),
+                state=ControlWorkChatStateEnum.ASK_ACCEPT_PLAN,
+            )
+            await send_ask_accept_work_plan_buttons(connections, chat)
+
+        elif message.text == 'Да, согласен':
+            await repeat_state_message(
+                connections=connections,
+                chat=chat,
+                message_text='Идет генерация структуры работы ...',
+            )
+            plan = await get_work_plan_from_db(chat)
+            text_structure = await generate_test_structure(type_work=ChatTypeTranslate[chat.chat_type].value, plan=plan)
+            if not text_structure:
+                await send_message_and_change_state(
+                    connections=connections,
+                    chat=chat,
+                    message_text='Произошла ошибка генерации. Создайте заказ заново.',
+                    state=ControlWorkChatStateEnum.ASK_ACCEPT_PLAN,
+                )
+                return
+            await send_message_and_change_state(
+                connections=connections,
+                chat=chat,
+                message_text=control_work_state_strings.CONTROL_WORK_ASK_ACCEPT_TEXT_STRUCTURE.format(
+                    control_work_text_structure=text_structure
+                ),
+                state=ControlWorkChatStateEnum.ASK_ACCEPT_TEXT_STRUCTURE,
+            )
+            await send_ask_accept_work_plan_buttons(connections, chat)
+
+        elif message.text == 'Нет, не согласен':
+            message.text = 'Да, согласен'
+            await self._control_work_ask_any_information(chat, message, connections)
+
+    async def _control_work_ask_accept_text_structure(self, chat: ChatSchema, message, connections) -> None:
         """
         Обработчик для состояния чата `ASK_ACCEPT_TEXT_STRUCTURE`.
 
@@ -199,12 +252,53 @@ class ControlWorkChatStateHandler:
         :param message: Сообщение, отправленное пользователем.
         :param connections: Список подключений по websocket.
         """
-        await send_message_and_change_state(
-            connections=connections,
-            chat=chat,
-            message_text=control_work_state_strings.CONTROL_WORK_DIALOG_IS_OVER,
-            state=ControlWorkChatStateEnum.DIALOG_IS_OVER,
-        )
+        plan = eval(await get_work_plan_from_db(chat))
+        if message.text not in ["Да, согласен", "Нет, не согласен"]:
+            message.text = 'Да, согласен'
+            await self._control_work_ask_accept_plan(chat, message, connections)
+
+        elif message.text == 'Да, согласен':
+            file_uuid = uuid.uuid4()
+
+            await repeat_state_message(
+                connections=connections,
+                chat=chat,
+                message_text='Идет генерация документа. Не закрывайте окно!',
+            )
+            await generate_document(file_uuid, plan)
+
+            # Сохранение информации о файле в базу данных
+            db_file = FileCreateSchema(
+                id=file_uuid,
+                user_id=chat.user_owner_id,
+                chat_id=chat.id,
+            )
+
+            async with async_session_maker() as session:
+                repo = FileRepo(session=session)
+                await repo.create_file(db_file)
+
+            await send_message_and_change_state(
+                connections=connections,
+                chat=chat,
+                message_text=control_work_state_strings.CONTROL_WORK_DIALOG_IS_OVER,
+                state=ControlWorkChatStateEnum.DIALOG_IS_OVER,
+            )
+
+            await create_system_message_in_db(chat, str(file_uuid), response_specific_state='file')
+            websocket_message = WebsocketMessageData(
+                message_type=WebsocketMessageType.SYSTEM_MESSAGE,
+                data={
+                    "file": f'{file_uuid}',
+                },
+            )
+            for connect in connections[chat.id]:
+                data = websocket_message_data_to_websocket_format(websocket_message)
+                await connect.send_text(data)
+
+        elif message.text == 'Нет, не согласен':
+            message.text = "Да, согласен"
+            await self._control_work_ask_accept_plan(chat, message, connections)
 
     @staticmethod
     async def _control_work_dialog_is_over(chat: ChatSchema, message, connections) -> None:
@@ -215,4 +309,8 @@ class ControlWorkChatStateHandler:
         :param message: Сообщение, отправленное пользователем.
         :param connections: Список подключений по websocket.
         """
-        # todo
+        await repeat_state_message(
+            connections=connections,
+            chat=chat,
+            message_text='Работа завершена. Если хотите начать заново, начните новый заказ.',
+        )

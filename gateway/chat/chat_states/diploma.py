@@ -6,14 +6,9 @@ from ai_module.openai_utilities.document_structure import generate_test_structur
 from ai_module.openai_utilities.message_handler import handle_question_ask_work_size
 from ai_module.openai_utilities.plan import generate_plan_via_chat, get_work_plan_from_db
 from gateway.chat.dependens.answers import send_message_and_change_state, repeat_state_message, \
-    create_system_message_in_db, send_message_in_websockets, send_ask_accept_work_plan_buttons
-from gateway.chat.processing_message.diploma import process_user_message_on_welcome_message_status, \
-    process_user_message_on_ask_work_size_status, generate_user_plan, process_user_message_on_ask_accept_plan_status
+    create_system_message_in_db, send_ask_accept_work_plan_buttons
 from gateway.config.database import async_session_maker
-from gateway.db.files.models import File
 from gateway.db.files.repo import FileRepo
-from gateway.db.messages.repo import MessageRepo
-from gateway.resources import strings
 from gateway.resources.chat_state_strings import diploma_state_strings
 from gateway.schemas.chat import ChatSchema
 from gateway.schemas.enums import DiplomaChatStateEnum, ChatTypeTranslate, WebsocketMessageType
