@@ -5,6 +5,7 @@ from gateway.chat.chat_states.diploma import DiplomaChatStateHandler
 from gateway.chat.chat_states.essay import EssayChatStateHandler
 from gateway.chat.chat_states.full_report import FullReportChatStateHandler
 from gateway.chat.chat_states.homework import HomeworkChatStateHandler
+from gateway.chat.chat_states.micro import MicroChatStateHandler
 from gateway.chat.chat_states.report import ReportChatStateHandler
 from gateway.chat.chat_states.work_with_file import WorkWithFileChatStateHandler
 from gateway.chat.chat_states.writing import WritingChatStateHandler
@@ -42,6 +43,8 @@ class FSM:
             await FullReportChatStateHandler.handle_message(FullReportChatStateHandler(), chat, message, connections)
         elif chat.chat_type == ChatType.HOMEWORK_CHAT_TYPE:
             await HomeworkChatStateHandler.handle_message(HomeworkChatStateHandler(), chat, message, connections)
+        elif chat.chat_type == ChatType.MICRO_CHAT_TYPE:
+            await MicroChatStateHandler.handle_message(MicroChatStateHandler(), chat, message, connections)
         elif chat.chat_type == ChatType.WORK_WITH_FILE_CHAT_TYPE:
             await WorkWithFileChatStateHandler.handle_message(WorkWithFileChatStateHandler(), chat, message,
                                                               connections)
@@ -66,5 +69,7 @@ class FSM:
             await FullReportChatStateHandler._first_message_init(chat, connections)
         elif chat.chat_type == ChatType.HOMEWORK_CHAT_TYPE:
             await HomeworkChatStateHandler._first_message_init(chat, connections)
+        elif chat.chat_type == ChatType.MICRO_CHAT_TYPE:
+            await MicroChatStateHandler._first_message_init(chat, connections)
         elif chat.chat_type == ChatType.WORK_WITH_FILE_CHAT_TYPE:
             await WorkWithFileChatStateHandler._first_message_init(chat, connections)

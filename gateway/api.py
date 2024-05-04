@@ -1,8 +1,10 @@
 import datetime
+import os
 import random
 import uuid
 
 from dotenv import load_dotenv
+from fastapi.security import HTTPBearer
 from redis import asyncio as aioredis
 from fastapi import FastAPI, Request, Depends, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -50,6 +52,8 @@ app.add_middleware(
 app.include_router(router_chat)
 
 add_pagination(app)
+
+oauth2_scheme = HTTPBearer()
 
 
 @AuthJWT.load_config
@@ -380,3 +384,30 @@ async def get_file_id_by_chat(chat_id: int, db: AsyncSession = Depends(get_db)):
         return FileResponse(path=file_path, filename=str(file_data.id) + '.docx', media_type='application/octet-stream')
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="File not found on server")
+
+
+@app.post("/files/upload")
+async def upload_file(
+        chat_id: int,
+        file: UploadFile,
+        Authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_db),
+        token: str = Depends(oauth2_scheme)
+):
+    Authorize.jwt_required()
+    current_user = Authorize.get_jwt_subject()
+    user = await session.execute(
+        select(Customer).where((Customer.id == current_user))
+    )
+    user = user.fetchone()
+
+    if user and file.filename.endswith(('.docx', '.txt')):
+        print('tut', user[0].id, chat_id)
+        os.makedirs(f"files/user_uploads/{user[0].id}", exist_ok=True)
+        file_location = f"files/user_uploads/{user[0].id}/{chat_id}"
+        contents = await file.read()
+        with open(file_location, 'wb') as f:
+            f.write(contents)
+
+        return {"Status": f"OK"}
+    return {"Status": f"Didn't find user."}
