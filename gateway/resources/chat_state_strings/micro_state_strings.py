@@ -1,0 +1,17 @@
+"""Сообщения для пользователя при заказе контрольной."""
+
+MICRO_WELCOME_STATE_MESSAGE = (
+    "Привет. Это работа с микрофоном."
+)
+
+MICRO_FIRST_STATE_MESSAGE = (
+    "MICRO_FIRST_STATE_MESSAGE STRING"
+)
+
+MICRO_SECOND_STATE_MESSAGE = (
+    "MICRO_SECOND_STATE_MESSAGE STRING"
+)
+
+MICRO_THIRD_STATE_MESSAGE = (
+    "MICRO_THIRD_STATE_MESSAGE STRING"
+)

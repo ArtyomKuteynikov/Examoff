@@ -217,6 +217,29 @@ class EssayChatStateEnum(StrEnum):
     DIALOG_IS_OVER = "dialog_is_over"
 
 
+class MicroChatStateEnum(StrEnum):
+    """
+    Состояние диалога при работе с микрофоном.
+    =========================================
+
+    WELCOME_STATE.
+        Состояние при первом подключение к чату по websocket.
+
+    FIRST_STATE.
+        ToDo Поменять название, добавить описание
+
+    SECOND_STATE.
+        ToDo Поменять название, добавить описание
+
+    THIRD_STATE.
+        ToDo Поменять название, добавить описание
+    """
+    WELCOME_STATE = "welcome_state"
+    FIRST_STATE = "first_state"
+    SECOND_STATE = "second_state"
+    THIRD_STATE = "third_state"
+
+
 class WritingChatStateEnum(StrEnum):
     """
     Состояние диалога при заказе сочинения.
