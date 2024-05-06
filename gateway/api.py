@@ -2,9 +2,12 @@ import datetime
 import os
 import random
 import uuid
+import secrets
+import string
 
 from dotenv import load_dotenv
 from fastapi.security import HTTPBearer
+from fastapi_sso import GoogleSSO
 from redis import asyncio as aioredis
 from fastapi import FastAPI, Request, Depends, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -35,6 +38,11 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from fastapi.responses import FileResponse
 
 load_dotenv()
+CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "CLIENT_ID is empty")
+CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "CLIENT_SECRET is empty")
+GOOGLE_REDIRECT_URL = os.environ.get("GOOGLE_REDIRECT_URL", "GOOGLE_REDIRECT_URL is empty")
+
+google_sso = GoogleSSO(CLIENT_ID, CLIENT_SECRET, GOOGLE_REDIRECT_URL)
 
 app = FastAPI(
     title="Examoff",
@@ -126,6 +134,47 @@ async def root(session: AsyncSession = Depends(get_db)):
     print(f"repo.get_message_by_id = {to_print}")
 
     return {"message": "Hello World"}
+
+
+@app.get("/google/login")
+async def google_login():
+    print(CLIENT_ID, CLIENT_SECRET, GOOGLE_REDIRECT_URL)
+    with google_sso:
+        return await google_sso.get_login_redirect()
+
+
+@app.get("/google/callback")
+async def google_callback(request: Request, session: AsyncSession = Depends(get_db), Authorize: AuthJWT = Depends()):
+    with google_sso:
+        google_user = await google_sso.verify_and_process(request)
+
+    # Проверка на наличии пользователя
+    query = select(Customer).where((Customer.email == google_user.email))
+    result = await session.execute(query)
+    user = result.first()
+    if user:
+        access_token = Authorize.create_access_token(subject=user[0].id)
+        return {
+            'access_token': access_token,
+            'customer_id': user[0].id
+        }
+
+    # Регистрация
+    user = Customer(
+        email=google_user.email,
+    )
+    session.add(user)
+    # await session.commit()
+    alphabet = string.ascii_letters + string.digits
+    password = ''.join(secrets.choice(alphabet) for i in range(20))
+    user.get_password_hash(password)
+    await session.commit()
+
+    access_token = Authorize.create_access_token(subject=user.id)
+    return {
+        'access_token': access_token,
+        'customer_id': user.id
+    }
 
 
 @app.post("/v1/signin", tags=['Account'])
