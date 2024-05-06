@@ -102,5 +102,5 @@ async def send_ask_accept_work_plan_buttons(connections, chat: ChatSchema):
             "button": "Нет, не согласен"
         }
     }
-    await send_message_in_websockets(connections, chat, str(yes_button))
-    await send_message_in_websockets(connections, chat, str(no_button))
+    await repeat_state_message(connections, chat, str(yes_button))
+    await repeat_state_message(connections, chat, str(no_button))
