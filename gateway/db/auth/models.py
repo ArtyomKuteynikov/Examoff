@@ -27,6 +27,7 @@ class Customer(Base):
     auto_payments: bool = Column(Boolean, default=False, nullable=False)
     show: bool = Column(Boolean, default=True, nullable=False)
     active: bool = Column(Boolean, default=True, nullable=False)
+    audio_file: str = Column(String(64), nullable=True)
     created = Column(DateTime(timezone=True), default=datetime.utcnow)
 
     def get_password_hash(self, password):
