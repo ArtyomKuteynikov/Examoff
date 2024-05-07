@@ -20,6 +20,8 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import FastAPI, Request, Depends, HTTPException
 from sqlalchemy import select
+from starlette.responses import HTMLResponse
+from starlette.staticfiles import StaticFiles
 from gateway.config.database import init_db, get_db
 from gateway.config.main import Settings, send_email
 from gateway.chat.router import router as router_chat
@@ -36,6 +38,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine
 from fastapi.responses import FileResponse
+from fastapi.templating import Jinja2Templates
 
 load_dotenv()
 CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "CLIENT_ID is empty")
@@ -47,6 +50,32 @@ google_sso = GoogleSSO(CLIENT_ID, CLIENT_SECRET, GOOGLE_REDIRECT_URL)
 app = FastAPI(
     title="Examoff",
 )
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
+
+@app.get("/yandex", response_class=HTMLResponse)
+async def read_item(request: Request):
+    return templates.TemplateResponse(
+        request=request, name="item.html",
+    )
+
+
+@app.get("/telegram", response_class=HTMLResponse)
+async def telegram(request: Request):
+    return templates.TemplateResponse(
+        request=request, name="tg.html",
+    )
+
+
+
+@app.get("/yandex/verification_code")
+async def yandex_verification_code(request: Request):
+    access_token = request.url.fragment
+    return {"access_token": access_token}
+
+
 
 app.add_middleware(
     CORSMiddleware,
