@@ -45,6 +45,7 @@ class Customer(models.Model):
     auto_payments = models.BooleanField(default=False)
     show = models.BooleanField(default=True)
     active = models.BooleanField(default=True, verbose_name="Статус активности")
+    audio_file = models.CharField(max_length=64, blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True, verbose_name="Время")
 
     def set_password_hash(self, password):

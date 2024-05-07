@@ -6,10 +6,9 @@ import secrets
 import string
 
 from dotenv import load_dotenv
-from fastapi.security import HTTPBearer
 from fastapi_sso import GoogleSSO
 from redis import asyncio as aioredis
-from fastapi import FastAPI, Request, Depends, UploadFile
+from fastapi import UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
@@ -25,6 +24,7 @@ from starlette.staticfiles import StaticFiles
 from gateway.config.database import init_db, get_db
 from gateway.config.main import Settings, send_email
 from gateway.chat.router import router as router_chat
+from gateway.audio.router import router as router_audio
 from gateway.db.chats.repo import ChatRepo
 from gateway.db.files.models import File
 from gateway.db.files.repo import FileRepo
@@ -87,10 +87,9 @@ app.add_middleware(
 )
 
 app.include_router(router_chat)
+app.include_router(router_audio)
 
 add_pagination(app)
-
-oauth2_scheme = HTTPBearer()
 
 
 @AuthJWT.load_config
@@ -136,6 +135,15 @@ async def authenticate_user(username: str, password: str, session: AsyncSession)
     if user and user[0].verify_password(password):
         return user[0]
     return None
+
+
+async def check_user(email: str, session: AsyncSession):
+    query = select(Customer).where((Customer.email == email))
+    result = await session.execute(query)
+    user = result.first()
+    if user:
+        return True
+    return False
 
 
 async def register_user(user_data: SignUp, session: AsyncSession):
@@ -338,6 +346,8 @@ async def edit_email(email: str, Authorize: AuthJWT = Depends(), session: AsyncS
     )
     user = user.fetchone()
     global redis_pool
+    if await check_user(email, session):
+        raise HTTPException(status_code=403, detail="user_not_allowed")
     if user:
         otp = random.randint(100000, 999999)
         await redis_pool.set(f"email:otp:{user[0].email}", otp, ex=600)
@@ -469,8 +479,7 @@ async def upload_file(
         chat_id: int,
         file: UploadFile,
         Authorize: AuthJWT = Depends(),
-        session: AsyncSession = Depends(get_db),
-        token: str = Depends(oauth2_scheme)
+        session: AsyncSession = Depends(get_db)
 ):
     Authorize.jwt_required()
     current_user = Authorize.get_jwt_subject()

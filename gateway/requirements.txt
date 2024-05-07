@@ -17,3 +17,5 @@ bcrypt
 python-multipart
 dadata
 openai
+fastapi_sso
+python-docx
