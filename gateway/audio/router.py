@@ -31,43 +31,30 @@ router = APIRouter(
 )
 
 
-async def validate_token(token: str):
+async def check_token(token: str):
     try:
         data = jwt.decode(str(token), SECRET_AUTH, algorithms=["HS256"])
     except jwt.ExpiredSignatureError:
         return None
-    except jwt.InvalidSignatureError:
+    if 'role_id' in data and 'room_id' in data:
+        return data['role_id'], data['room_id'], (data['staff_id'] if data['role_id'] == 1 else None)
+    else:
         return None
-
-    async for session in get_db():
-        chat_repo = ChatRepo(session)
-        chat = await chat_repo.get_chat_by_id(data['chat_id'])
-
-        if data['user_id'] == chat.user_owner_id:
-            return JWTTokenPayloadDataSchema(
-                user_id=data['user_id'],
-                chat_id=data['chat_id']
-            )
 
 
 class ConnectionManager:
     def __init__(self):
         self.connections: dict = defaultdict(dict)
         self.generator = self.get_notification_generator()
-        self.fsm = FSM()
 
-    async def connect(self, websocket: WebSocket, chat_id: int):
+    async def connect(self, websocket: WebSocket, room_id: int):
         await websocket.accept()
-        if self.connections[chat_id] == {} or len(self.connections[chat_id]) == 0:
-            self.connections[chat_id] = []
-        self.connections[chat_id].append(websocket)
+        if self.connections[room_id] == {} or len(self.connections[room_id]) == 0:
+            self.connections[room_id] = []
+        self.connections[room_id].append(websocket)
 
-    def disconnect(self, websocket: WebSocket, chat_id: int):
-        self.connections[chat_id].remove(websocket)
-
-    async def check_first_connection(self, chat: ChatSchema):
-        if chat.chat_state is None:
-            await self.fsm.init_first_message(chat, self.connections)
+    def disconnect(self, websocket: WebSocket, room_id: int):
+        self.connections[room_id].remove(websocket)
 
     async def get_notification_generator(self):
         while True:
@@ -76,78 +63,60 @@ class ConnectionManager:
             room_name = message["room_name"]
             await self._notify(msg, room_name)
 
-    def get_members(self, chat_id: int):
+    def get_members(self, room_id: int):
         try:
-            return self.connections[chat_id]
+            return self.connections[room_id]
         except Exception:
             return None
 
-    async def broadcast(
-            self,
-            websocket: WebSocket,
-            websocket_message: WebsocketMessageData,
-            chat: ChatSchema,
-            user_id: int
-    ):
-        if websocket_message.message_type == WebsocketMessageType.USER_MESSAGE:
-            message_in_creation = MessageInCreationSchema(
-                chat_id=chat.id,
-                text=websocket_message.data["message_text"],
-                sender_id=user_id,
-                response_specific_state=chat.chat_state,
-            )
-            message_ib_db = await add_messages_to_database(message_in_creation)
-            if len(self.connections[chat.id]):
-                await self.repeat_user_message_to_other_connections(websocket, chat.id, websocket_message)
+    async def broadcast(self, message: dict, room_id: int, role: int, staff_id: int | None = None):
+        message_text = message['message']
+        msg = await self.add_messages_to_database(message_text, room_id, role, staff_id)
+        data = {"message": message_text, "sender": role, "message_id": msg.id}
+        print(self.connections)
+        for connection in self.connections[room_id]:
+            try:
+                await connection.send_text(json.dumps(data))
+            except:
+                self.connections[room_id].remove(connection)
 
-            await self.fsm.fsm_handle_message(chat, message_ib_db, self.connections)
-
-    async def send_websocket_message(self, chat_id: int):
-        for connect in self.connections[chat_id]:
-            await connect.send_text(f"Hello")
-
-    async def repeat_user_message_to_other_connections(
-            self,
-            websocket: WebSocket,
-            chat_id: int,
-            message: WebsocketMessageData,
-    ):
-        return
-        # todo пофиксить баг
-        message_to_send = message
-        for connect in self.connections[chat_id]:
-            if connect == websocket:
-                continue
-            message_to_send.message_type = WebsocketMessageType.USER_MESSAGE_FROM_OTHER_SOCKET
-            data = websocket_message_data_to_websocket_format(message_to_send)
-            await connect.send_text(data)
+    @staticmethod
+    async def add_messages_to_database(message: str, room_id: int, role: int, staff_id: int | None = None):
+        async with async_session_maker() as session:
+            # msg = OrderMessages(
+            #     message=message,
+            #     order_id=room_id,
+            #     author=role,
+            #     manager_id=staff_id,
+            #     created=datetime.datetime.now()
+            # )
+            # session.add(msg)
+            await session.commit()
+        return  # msg
 
 
 manager = ConnectionManager()
 
 
-@router.websocket('/ws/')
-async def websocket_connection(websocket: WebSocket, token: str = Query(...), session: AsyncSession = Depends(get_db)):
-    connection_data = await validate_token(token)
-    if not connection_data:
-        raise WebSocketException(code=403, reason='incorrect_token')
-    await manager.connect(websocket, connection_data.chat_id)
-
-    chat_repo = ChatRepo(session=session)
-    chat = await chat_repo.get_chat_by_id(connection_data.chat_id)
-    await manager.check_first_connection(chat)
+@router.websocket('/ws/{room_id}')
+async def websocket(websocket: WebSocket, token: str = Query(...)):
+    data = await check_token(token)
+    if not data:
+        raise HTTPException(status_code=403, detail='incorrect_token')
+    role, room_id, current_user = data
+    await manager.connect(websocket, room_id)
     try:
         while True:
-            json_data = await websocket.receive_json()
-            websocket_message_data = WebsocketMessageData(
-                message_type=json_data['message_type'],
-                data=json_data['data'],
-            )
-            await manager.broadcast(websocket, websocket_message_data, chat, connection_data.user_id)
+            data = await websocket.receive_json()
+            if current_user:
+                await manager.broadcast(data, room_id, role, staff_id=current_user)
+            else:
+                await manager.broadcast(data, room_id, role)
     except WebSocketDisconnect:
-        manager.disconnect(websocket, connection_data.chat_id)
+        manager.disconnect(websocket, room_id)
 
 
+# TODO: cделать эндпоинт для загрузки файла и эндпоинт для получения
 @router.post("/voice-test/upload")
 async def upload_audio_test(
         file: UploadFile,
@@ -168,7 +137,7 @@ async def upload_audio_test(
             f.write(contents)
         user[0].audio_file = filename
         await session.commit()
-        return {"Status": f"OK"}
+        return {"success": True}
     return HTTPException(status_code=403, detail="Auth failed.")
 
 
@@ -192,10 +161,12 @@ async def upload_audio(
         with open(f'{os.getcwd()}/gateway/audio/audio_files/{filename}', 'wb') as f:
             f.write(contents)
         result = processing(f'{os.getcwd()}/gateway/audio/audio_files/{user[0].audio_file}',
-                   f'{os.getcwd()}/gateway/audio/audio_files/{filename}')
+                            f'{os.getcwd()}/gateway/audio/audio_files/{filename}')
         if os.path.exists(f'{os.getcwd()}/gateway/audio/audio_files/{filename}'):
             os.remove(f'{os.getcwd()}/gateway/audio/audio_files/{filename}')
         if result:
+            # TODO: broadcast message to ws
+            # TODO: ask ChatGPT and broadcast response
             return {
                 "author": "professor",
                 "result": result
