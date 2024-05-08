@@ -3,6 +3,7 @@ import grpc
 import yandex.cloud.ai.stt.v3.stt_pb2 as stt_pb2
 import yandex.cloud.ai.stt.v3.stt_service_pb2_grpc as stt_service_pb2_grpc
 
+
 CHUNK_SIZE = 16000
 API_KEY = 'AQVNyxAphUPg01f3J9GljwCDRPeetoSvD6XhERD1'
 
@@ -28,10 +29,7 @@ def gen(audio_file_name):
         )
     )
 
-    # Отправьте сообщение с настройками распознавания.
     yield stt_pb2.StreamingRequest(session_options=recognize_options)
-
-    # Прочитайте аудиофайл и отправьте его содержимое порциями.
     with open(audio_file_name, 'rb') as f:
         data = f.read(CHUNK_SIZE)
         while data != b'':
@@ -40,12 +38,10 @@ def gen(audio_file_name):
 
 
 def run(audio_file_name):
-    # Установите соединение с сервером.
     cred = grpc.ssl_channel_credentials()
     channel = grpc.secure_channel('stt.api.cloud.yandex.net:443', cred)
     stub = stt_service_pb2_grpc.RecognizerStub(channel)
 
-    # Отправьте данные для распознавания.
     it = stub.RecognizeStreaming(gen(audio_file_name), metadata=(
        ('authorization', f'Api-Key {API_KEY}'),
     ))
@@ -61,6 +57,3 @@ def run(audio_file_name):
     except grpc._channel._Rendezvous as err:
         print(f'Error code {err._state.code}, message: {err._state.details}')
         raise err
-
-
-# print(run(r'C:\Users\Lenovo\PycharmProjects\Examoff\gateway\audio\audio_files\audio_old.wav'))

@@ -154,10 +154,8 @@ async def upload_audio_test(
         Authorize: AuthJWT = Depends(),
         session: AsyncSession = Depends(get_db)
 ):
-    # Authorize.jwt_required()
-    # current_user = Authorize.get_jwt_subject()
-
-    current_user = 3
+    Authorize.jwt_required()
+    current_user = Authorize.get_jwt_subject()
     user = await session.execute(
         select(Customer).where((Customer.id == current_user))
     )
@@ -181,9 +179,8 @@ async def upload_audio(
         Authorize: AuthJWT = Depends(),
         session: AsyncSession = Depends(get_db)
 ):
-    # Authorize.jwt_required()
-    # current_user = Authorize.get_jwt_subject()
-    current_user = 3
+    Authorize.jwt_required()
+    current_user = Authorize.get_jwt_subject()
     user = await session.execute(
         select(Customer).where((Customer.id == current_user))
     )

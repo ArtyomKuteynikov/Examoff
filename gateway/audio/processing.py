@@ -18,9 +18,3 @@ def processing(test_audio, voice):
     if os.path.exists(combined_filename):
         os.remove(combined_filename)
     return transcription
-
-
-import time
-t1 = time.time()
-print(processing(r'C:\Users\Lenovo\PycharmProjects\Examoff\gateway\audio\audio_files\audio2.wav', r'C:\Users\Lenovo\PycharmProjects\Examoff\gateway\audio\audio_files\audio.wav'))
-print(time.time() - t1)
