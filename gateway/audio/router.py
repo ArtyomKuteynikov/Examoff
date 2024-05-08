@@ -23,6 +23,7 @@ from gateway.schemas.websocket_data import WebsocketMessageData, websocket_messa
 from fastapi_jwt_auth import AuthJWT
 from gateway.db.auth.models import Customer, Subscriptions
 from sqlalchemy import select
+from gateway.audio.processing import processing
 
 router = APIRouter(
     prefix="/audio",
@@ -148,13 +149,15 @@ async def websocket_connection(websocket: WebSocket, token: str = Query(...), se
 
 
 @router.post("/voice-test/upload")
-async def upload_audio(
+async def upload_audio_test(
         file: UploadFile,
         Authorize: AuthJWT = Depends(),
         session: AsyncSession = Depends(get_db)
 ):
-    Authorize.jwt_required()
-    current_user = Authorize.get_jwt_subject()
+    # Authorize.jwt_required()
+    # current_user = Authorize.get_jwt_subject()
+
+    current_user = 3
     user = await session.execute(
         select(Customer).where((Customer.id == current_user))
     )
@@ -178,8 +181,9 @@ async def upload_audio(
         Authorize: AuthJWT = Depends(),
         session: AsyncSession = Depends(get_db)
 ):
-    Authorize.jwt_required()
-    current_user = Authorize.get_jwt_subject()
+    # Authorize.jwt_required()
+    # current_user = Authorize.get_jwt_subject()
+    current_user = 3
     user = await session.execute(
         select(Customer).where((Customer.id == current_user))
     )
@@ -190,5 +194,17 @@ async def upload_audio(
         contents = await file.read()
         with open(f'{os.getcwd()}/gateway/audio/audio_files/{filename}', 'wb') as f:
             f.write(contents)
-        return {"Status": f"OK"}
+        result = processing(f'{os.getcwd()}/gateway/audio/audio_files/{user[0].audio_file}',
+                   f'{os.getcwd()}/gateway/audio/audio_files/{filename}')
+        if os.path.exists(f'{os.getcwd()}/gateway/audio/audio_files/{filename}'):
+            os.remove(f'{os.getcwd()}/gateway/audio/audio_files/{filename}')
+        if result:
+            return {
+                "author": "professor",
+                "result": result
+            }
+        return {
+            "author": "student",
+            "result": None
+        }
     return HTTPException(status_code=403, detail="Auth failed.")
