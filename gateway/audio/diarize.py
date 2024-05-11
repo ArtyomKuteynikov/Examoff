@@ -21,9 +21,3 @@ def diarizer(file):
         return False
     else:
         return True
-
-
-import time
-t1 = time.time()
-diarizer(r'C:\Users\Lenovo\PycharmProjects\Examoff\gateway\audio\audio_files\audio_old.wav')
-print(time.time() - t1)
