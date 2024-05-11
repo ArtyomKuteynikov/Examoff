@@ -51,7 +51,7 @@ app = FastAPI(
     title="Examoff",
 )
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/gateway/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 

@@ -129,16 +129,19 @@ async def upload_audio_test(
         select(Customer).where((Customer.id == current_user))
     )
     user = user.fetchone()
+    if not user:
+        return HTTPException(status_code=404, detail="USER NOT FOUND")
 
-    if user and file.filename.endswith('.wav'):
-        filename = f'{uuid.uuid4()}.wav'
-        contents = await file.read()
-        with open(f'{os.getcwd()}/gateway/audio/audio_files/{filename}', 'wb') as f:
-            f.write(contents)
-        user[0].audio_file = filename
-        await session.commit()
-        return {"success": True}
-    return HTTPException(status_code=403, detail="Auth failed.")
+    if not file.filename.endswith('.wav'):
+        return HTTPException(status_code=400, detail=f"INCORRECT FILE FORMAT {file.filename}")
+
+    filename = f'{uuid.uuid4()}.wav'
+    contents = await file.read()
+    with open(f'{os.getcwd()}/gateway/audio/audio_files/{filename}', 'wb') as f:
+        f.write(contents)
+    user[0].audio_file = filename
+    await session.commit()
+    return {"success": True}
 
 
 @router.post("/voice/upload")
@@ -155,24 +158,27 @@ async def upload_audio(
     )
     user = user.fetchone()
 
-    if user and file.filename.endswith('.wav'):
-        filename = f'{uuid.uuid4()}.wav'
-        contents = await file.read()
-        with open(f'{os.getcwd()}/gateway/audio/audio_files/{filename}', 'wb') as f:
-            f.write(contents)
-        result = processing(f'{os.getcwd()}/gateway/audio/audio_files/{user[0].audio_file}',
-                            f'{os.getcwd()}/gateway/audio/audio_files/{filename}')
-        if os.path.exists(f'{os.getcwd()}/gateway/audio/audio_files/{filename}'):
-            os.remove(f'{os.getcwd()}/gateway/audio/audio_files/{filename}')
-        if result:
-            # TODO: broadcast message to ws
-            # TODO: ask ChatGPT and broadcast response
-            return {
-                "author": "professor",
-                "result": result
-            }
+    if not user:
+        return HTTPException(status_code=404, detail="USER NOT FOUND")
+
+    if not file.filename.endswith('.wav'):
+        return HTTPException(status_code=400, detail=f"INCORRECT FILE FORMAT {file.filename}")
+    filename = f'{uuid.uuid4()}.wav'
+    contents = await file.read()
+    with open(f'{os.getcwd()}/gateway/audio/audio_files/{filename}', 'wb') as f:
+        f.write(contents)
+    result = processing(f'{os.getcwd()}/gateway/audio/audio_files/{user[0].audio_file}',
+                        f'{os.getcwd()}/gateway/audio/audio_files/{filename}')
+    if os.path.exists(f'{os.getcwd()}/gateway/audio/audio_files/{filename}'):
+        os.remove(f'{os.getcwd()}/gateway/audio/audio_files/{filename}')
+    if result:
+        # TODO: broadcast message to ws
+        # TODO: ask ChatGPT and broadcast response
         return {
-            "author": "student",
-            "result": None
+            "author": "professor",
+            "result": result
         }
-    return HTTPException(status_code=403, detail="Auth failed.")
+    return {
+        "author": "student",
+        "result": None
+    }
