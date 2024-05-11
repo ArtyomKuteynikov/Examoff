@@ -5,6 +5,12 @@ pipeline = Pipeline.from_pretrained(
     "pyannote/speaker-diarization-3.1",
     use_auth_token="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")
 
+try:
+    import torch
+    pipeline.to(torch.device("cuda"))
+except:
+    pass
+
 
 def diarizer(file):
     diarization = pipeline(file)
@@ -12,12 +18,12 @@ def diarizer(file):
     student = diarizated[0][1]
     speaker = diarizated[-1][1]
     if speaker == student:
-        print('-----------------------------------')
-        print('Сказал студент')
-        print('-----------------------------------')
         return False
     else:
-        print('-----------------------------------')
-        print('Сказал преподаватель')
-        print('-----------------------------------')
         return True
+
+
+import time
+t1 = time.time()
+diarizer(r'C:\Users\Lenovo\PycharmProjects\Examoff\gateway\audio\audio_files\audio_old.wav')
+print(time.time() - t1)

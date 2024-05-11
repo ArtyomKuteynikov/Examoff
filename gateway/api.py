@@ -489,7 +489,6 @@ async def upload_file(
     user = user.fetchone()
 
     if user and file.filename.endswith(('.docx', '.txt')):
-        print('tut', user[0].id, chat_id)
         os.makedirs(f"files/user_uploads/{user[0].id}", exist_ok=True)
         file_location = f"files/user_uploads/{user[0].id}/{chat_id}"
         contents = await file.read()

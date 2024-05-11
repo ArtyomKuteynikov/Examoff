@@ -60,3 +60,18 @@ class File(models.Model):
 
     class Meta:
         db_table = 'files'  # Указание имени таблицы
+
+
+class HelpChat(models.Model):
+    STATES = [
+        (0, 'INIT'),
+        (1, 'FILE_LOADED'),
+        (2, 'PAUSED'),
+        (3, 'FINISHED'),
+    ]
+    owner = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    state = models.IntegerField(choices=STATES, default=0)
+
+    class Meta:
+        db_table = 'help_chat'
+
