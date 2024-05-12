@@ -67,7 +67,9 @@ class AudioChat(models.Model):
         (0, 'INIT'),
         (1, 'FILE_LOADED'),
         (2, 'WITHOUT_FILE'),
-        (3, 'FINISHED'),
+        (3, 'STARTED'),
+        (4, 'PAUSED'),
+        (5, 'FINISHED'),
     ]
     owner = models.ForeignKey(Customer, on_delete=models.CASCADE)
     state = models.IntegerField(choices=STATES, default=0)
