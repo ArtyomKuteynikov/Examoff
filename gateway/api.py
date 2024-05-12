@@ -5,6 +5,7 @@ import uuid
 import secrets
 import string
 
+import requests
 from dotenv import load_dotenv
 from fastapi_sso import GoogleSSO
 from redis import asyncio as aioredis
@@ -69,12 +70,50 @@ async def telegram(request: Request):
     )
 
 
-
 @app.get("/yandex/verification_code")
 async def yandex_verification_code(request: Request):
     access_token = request.url.fragment
     return {"access_token": access_token}
 
+
+@app.get("/yandex/auth")
+async def yandex_auth(yandex_token: str, session: AsyncSession = Depends(get_db), Authorize: AuthJWT = Depends()):
+    response = requests.get(
+        url='https://login.yandex.ru/info',
+        params={
+            'oauth_token': yandex_token
+        }
+    )
+    response = response.json()
+    yandex_email = response['default_email']
+
+    # Проверка на наличии пользователя
+    query = select(Customer).where((Customer.email == yandex_email))
+    result = await session.execute(query)
+    user = result.first()
+    if user:
+        access_token = Authorize.create_access_token(subject=user[0].id)
+        return {
+            'access_token': access_token,
+            'customer_id': user[0].id
+        }
+
+    # Регистрация
+    user = Customer(
+        email=yandex_email,
+    )
+    session.add(user)
+    # await session.commit()
+    alphabet = string.ascii_letters + string.digits
+    password = ''.join(secrets.choice(alphabet) for i in range(20))
+    user.get_password_hash(password)
+    await session.commit()
+
+    access_token = Authorize.create_access_token(subject=user.id)
+    return {
+        'access_token': access_token,
+        'customer_id': user.id
+    }
 
 
 app.add_middleware(
