@@ -135,6 +135,10 @@ async def upload_audio_test(
     # if not file.filename.endswith('.wav'):
     #     return HTTPException(status_code=400, detail=f"INCORRECT FILE FORMAT {file.filename}")
 
+    if user[0].audio_file:
+        if os.path.exists(f'{os.getcwd()}/gateway/audio/audio_files/{user[0].audio_file}'):
+            os.remove(f'{os.getcwd()}/gateway/audio/audio_files/{user[0].audio_file}')
+
     filename = f'{uuid.uuid4()}.wav'
     contents = await file.read()
     with open(f'{os.getcwd()}/gateway/audio/audio_files/{filename}', 'wb') as f:
