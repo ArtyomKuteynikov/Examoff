@@ -1,15 +1,18 @@
 import datetime
+import hashlib
+import hmac
 import os
 import random
 import uuid
 import secrets
 import string
+from typing import Annotated
 
 import requests
 from dotenv import load_dotenv
 from fastapi_sso import GoogleSSO
 from redis import asyncio as aioredis
-from fastapi import UploadFile
+from fastapi import UploadFile, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
@@ -20,7 +23,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import FastAPI, Request, Depends, HTTPException
 from sqlalchemy import select
-from starlette.responses import HTMLResponse
+from starlette.responses import HTMLResponse, PlainTextResponse
 from starlette.staticfiles import StaticFiles
 from gateway.config.database import init_db, get_db
 from gateway.config.main import Settings, send_email
@@ -45,7 +48,7 @@ load_dotenv()
 CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "CLIENT_ID is empty")
 CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "CLIENT_SECRET is empty")
 GOOGLE_REDIRECT_URL = os.environ.get("GOOGLE_REDIRECT_URL", "GOOGLE_REDIRECT_URL is empty")
-
+BOT_TOKEN_HASH = hashlib.sha256(os.environ['BOT_TOKEN'].encode())
 google_sso = GoogleSSO(CLIENT_ID, CLIENT_SECRET, GOOGLE_REDIRECT_URL)
 
 app = FastAPI(
@@ -70,10 +73,50 @@ async def telegram(request: Request):
     )
 
 
-@app.get("/yandex/verification_code")
-async def yandex_verification_code(request: Request):
-    access_token = request.url.fragment
-    return {"access_token": access_token}
+@app.get("/auth/telegram-callback")
+async def telegram_auth(
+        request: Request,
+        user_id: Annotated[int, Query(alias='id')],
+        query_hash: Annotated[str, Query(alias='hash')],
+        next_url: Annotated[str, Query(alias='next')] = '/',
+        session: AsyncSession = Depends(get_db),
+        Authorize: AuthJWT = Depends()
+):
+    params = request.query_params.items()
+    print(params)
+    data_check_string = '\n'.join(sorted(f'{x}={y}' for x, y in params if x not in ('hash', 'next')))
+    computed_hash = hmac.new(BOT_TOKEN_HASH.digest(), data_check_string.encode(), 'sha256').hexdigest()
+    is_correct = hmac.compare_digest(computed_hash, query_hash)
+    if not is_correct:
+        return PlainTextResponse('Authorization failed. Please try again', status_code=401)
+    username = '@' + str(request.query_params['username'])
+    # Проверка на наличии пользователя
+    query = select(Customer).where((Customer.email == username))
+    result = await session.execute(query)
+    user = result.first()
+    if user:
+        access_token = Authorize.create_access_token(subject=user[0].id)
+        return {
+            'access_token': access_token,
+            'customer_id': user[0].id
+        }
+
+    # Регистрация
+    user = Customer(
+        email=username,
+    )
+    session.add(user)
+    # await session.commit()
+    alphabet = string.ascii_letters + string.digits
+    password = ''.join(secrets.choice(alphabet) for i in range(20))
+    user.get_password_hash(password)
+    await session.commit()
+
+    access_token = Authorize.create_access_token(subject=user.id)
+    return {
+        'access_token': access_token,
+        'customer_id': user.id
+    }
 
 
 @app.get("/yandex/auth")
