@@ -81,7 +81,7 @@ class AudioMessage(models.Model):
         (0, 'Преподаватель'),
         (1, 'ChatGPT')
     ]
-    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, verbose_name="Чат")
+    chat = models.ForeignKey(AudioChat, on_delete=models.CASCADE, verbose_name="Чат")
     sender = models.IntegerField(choices=SENDERS,  verbose_name="Отправитель")
     text = models.TextField(verbose_name="Текст сообщения")
     created_at = models.DateTimeField(auto_now_add=True)
