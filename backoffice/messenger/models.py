@@ -62,16 +62,39 @@ class File(models.Model):
         db_table = 'files'  # Указание имени таблицы
 
 
-class HelpChat(models.Model):
+class AudioChat(models.Model):
     STATES = [
         (0, 'INIT'),
         (1, 'FILE_LOADED'),
-        (2, 'PAUSED'),
+        (2, 'WITHOUT_FILE'),
         (3, 'FINISHED'),
     ]
     owner = models.ForeignKey(Customer, on_delete=models.CASCADE)
     state = models.IntegerField(choices=STATES, default=0)
 
     class Meta:
-        db_table = 'help_chat'
+        db_table = 'audio_chat'
+
+
+class AudioMessage(models.Model):
+    SENDERS = [
+        (0, 'Преподаватель'),
+        (1, 'ChatGPT')
+    ]
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, verbose_name="Чат")
+    sender = models.IntegerField(choices=SENDERS,  verbose_name="Отправитель")
+    text = models.TextField(verbose_name="Текст сообщения")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'audio_message'
+
+
+class AudioChatFile(models.Model):
+    file = models.CharField(max_length=256)  # Уникальный идентификатор и название файла
+    user = models.ForeignKey(Customer, on_delete=models.CASCADE)  # ID пользователя, который может скачать файл
+    chat = models.ForeignKey(AudioChat, on_delete=models.CASCADE, verbose_name="Чат")
+
+    class Meta:
+        db_table = 'audio_chat_files'  # Указание имени таблицы
 
