@@ -34,6 +34,7 @@ async def check_token(token: str):
         data = jwt.decode(str(token), SECRET_AUTH, algorithms=["HS256"])
     except jwt.ExpiredSignatureError:
         return None
+    print(data)
     if 'chat_id' in data and 'user_id' in data:
         return data['chat_id'], data['user_id']
     else:
@@ -95,7 +96,7 @@ manager = ConnectionManager()
 
 
 @router.websocket('/ws')
-async def websocket(room_id: int, websocket: WebSocket, token: str = Query(...)):
+async def websocket(websocket: WebSocket, token: str = Query(...)):
     room_id, current_user = await check_token(token)
     if not room_id or not current_user:
         raise HTTPException(status_code=403, detail='INCORRECT TOKEN')
