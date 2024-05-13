@@ -1,3 +1,5 @@
+from json import dumps
+
 from gateway.config.database import add_messages_to_database, get_db
 from gateway.db.chats.repo import ChatRepo
 from gateway.resources import strings
@@ -56,6 +58,52 @@ async def send_message_in_websockets(connections, chat: ChatSchema, message_text
         for connect in connections[chat.id]:
             data = websocket_message_data_to_websocket_format(websocket_message)
             await connect.send_text(data)
+    except Exception as e:
+        print(e)
+
+
+async def send_free_sate_message_in_websockets(connections, chat: ChatSchema, chunk_text: str, finish_reason: str) \
+        -> None:
+    """
+    Отправляет сообщение по websockets.
+
+    :param connections: Список соединений по websocket.
+    :param chat: Чат с пользователем.
+    :param chunk_text: Текст сообщения для отправки.
+    :param finish_reason: Текст сообщения для отправки.
+    """
+    data = {
+        "message_type": "system_message",
+        "data": {
+            "chunk_text": f"{chunk_text}",
+            "finish_reason": f"{finish_reason}",
+        }
+    }
+    json_data = dumps(data, ensure_ascii=False)
+    # Отправка только по каналам, что относятся к чату.
+    try:
+        for connect in connections[chat.id]:
+            await connect.send_text(json_data)
+    except Exception as e:
+        print(e)
+
+
+async def open_free_sate_message_in_websockets(connections, chat: ChatSchema) -> None:
+    """
+    Отправляет сообщение по websockets.
+
+    :param connections: Список соединений по websocket.
+    :param chat: Чат с пользователем.
+    """
+    data = {
+        "message_type": "system_message",
+        "new_message": "open"
+    }
+    json_data = dumps(data, ensure_ascii=False)
+    # Отправка только по каналам, что относятся к чату.
+    try:
+        for connect in connections[chat.id]:
+            await connect.send_text(json_data)
     except Exception as e:
         print(e)
 

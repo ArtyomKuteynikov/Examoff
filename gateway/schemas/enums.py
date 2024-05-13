@@ -37,6 +37,7 @@ class ChatType(StrEnum):
     HOMEWORK_CHAT_TYPE = 'HOMEWORK_CHAT_TYPE'
     WORK_WITH_FILE_CHAT_TYPE = 'WORK_WITH_FILE_CHAT_TYPE'
     MICRO_CHAT_TYPE = 'MICRO_CHAT_TYPE'
+    FREE_STATE_CHAT_TYPE = 'FREE_STATE_CHAT_TYPE'
 
 
 class ChatTypeTranslate(StrEnum):
@@ -92,6 +93,19 @@ class DiplomaChatStateEnum(StrEnum):
     ASK_ACCEPT_PLAN = "ask_accept_plan"
     ASK_ACCEPT_TEXT_STRUCTURE = "ask_accept_text_structure"
     DIALOG_IS_OVER = "dialog_is_over"
+
+
+class FreeStateChatStateEnum(StrEnum):
+    """
+    Состояние диалога при свободном режиме.
+    =======================================
+
+    WELCOME_MESSAGE.
+        Приветствие;
+
+    """
+    WELCOME_MESSAGE = "welcome_message"
+    CIRCLE = "circle"
 
 
 class WorkWithFileChatStateEnum(StrEnum):
