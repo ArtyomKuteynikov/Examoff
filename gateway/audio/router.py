@@ -1,3 +1,5 @@
+import asyncio
+import datetime
 import json
 import os
 import uuid
@@ -5,25 +7,18 @@ from collections import defaultdict
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from gateway.chat.chat_states.fsm import FSM
 from gateway.config.main import SECRET_AUTH
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, Depends, UploadFile
-from fastapi import HTTPException, WebSocketException
-from gateway.config.database import async_session_maker, get_db, add_messages_to_database
+from fastapi import HTTPException
+from gateway.config.database import async_session_maker, get_db
 import jwt
 
-from gateway.db.chats.repo import ChatRepo
-from gateway.db.messages.repo import MessageRepo
-from gateway.schemas.chat import ChatSchema, ChatInCreationSchema
-from gateway.schemas.enums import WebsocketMessageType, ChatType
-from gateway.schemas.message import MessageSchema, MessageInCreationSchema
-from gateway.schemas.token import JWTTokenPayloadDataSchema
-from gateway.schemas.websocket_data import WebsocketMessageData, websocket_message_data_to_websocket_format
-
 from fastapi_jwt_auth import AuthJWT
-from gateway.db.auth.models import Customer, Subscriptions
+from gateway.db.auth.models import Customer
+from gateway.db.audio.models import AudioMessage, AudioChat, AudioChatFile
 from sqlalchemy import select
 from gateway.audio.processing import processing
+from fastapi.responses import FileResponse
 
 router = APIRouter(
     prefix="/audio",
@@ -31,13 +26,16 @@ router = APIRouter(
 )
 
 
+CHATGPT_MOCK = '''Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'''
+
+
 async def check_token(token: str):
     try:
         data = jwt.decode(str(token), SECRET_AUTH, algorithms=["HS256"])
     except jwt.ExpiredSignatureError:
         return None
-    if 'role_id' in data and 'room_id' in data:
-        return data['role_id'], data['room_id'], (data['staff_id'] if data['role_id'] == 1 else None)
+    if 'chat_id' in data and 'customer_id' in data:
+        return data['chat_id'], data['customer_id']
     else:
         return None
 
@@ -69,11 +67,10 @@ class ConnectionManager:
         except Exception:
             return None
 
-    async def broadcast(self, message: dict, room_id: int, role: int, staff_id: int | None = None):
+    async def broadcast(self, message: dict, room_id: int, sender: int):
         message_text = message['message']
-        msg = await self.add_messages_to_database(message_text, room_id, role, staff_id)
-        data = {"message": message_text, "sender": role, "message_id": msg.id}
-        print(self.connections)
+        msg = await self.add_messages_to_database(message_text, room_id, sender)
+        data = {"message": message_text, "message_id": msg.id}
         for connection in self.connections[room_id]:
             try:
                 await connection.send_text(json.dumps(data))
@@ -81,18 +78,17 @@ class ConnectionManager:
                 self.connections[room_id].remove(connection)
 
     @staticmethod
-    async def add_messages_to_database(message: str, room_id: int, role: int, staff_id: int | None = None):
+    async def add_messages_to_database(message: str, room_id: int, sender: int):
         async with async_session_maker() as session:
-            # msg = OrderMessages(
-            #     message=message,
-            #     order_id=room_id,
-            #     author=role,
-            #     manager_id=staff_id,
-            #     created=datetime.datetime.now()
-            # )
-            # session.add(msg)
+            msg = AudioMessage(
+                chat_id=room_id,
+                sender=sender,
+                text=message,
+                created_at=datetime.datetime.now()
+            )
+            session.add(msg)
             await session.commit()
-        return  # msg
+        return msg
 
 
 manager = ConnectionManager()
@@ -100,23 +96,188 @@ manager = ConnectionManager()
 
 @router.websocket('/ws/{room_id}')
 async def websocket(websocket: WebSocket, token: str = Query(...)):
-    data = await check_token(token)
-    if not data:
+    room_id, current_user = await check_token(token)
+    if not room_id or not current_user:
         raise HTTPException(status_code=403, detail='incorrect_token')
-    role, room_id, current_user = data
     await manager.connect(websocket, room_id)
     try:
         while True:
             data = await websocket.receive_json()
-            if current_user:
-                await manager.broadcast(data, room_id, role, staff_id=current_user)
-            else:
-                await manager.broadcast(data, room_id, role)
+            await manager.broadcast(data, room_id, sender=0)
     except WebSocketDisconnect:
         manager.disconnect(websocket, room_id)
 
 
-# TODO: cделать эндпоинт для загрузки файла и эндпоинт для получения
+@router.post("/")
+async def create_audio_chat(Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_db)):
+    Authorize.jwt_required()
+    current_user = Authorize.get_jwt_subject()
+    new_chat = AudioChat(owner_id=current_user)
+    session.add(new_chat)
+    await session.commit()
+    await session.refresh(new_chat)
+    return new_chat
+
+
+@router.get("/no-file")
+async def do_not_upload_file(chat_id: int, Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_db)):
+    Authorize.jwt_required()
+    current_user = Authorize.get_jwt_subject()
+    chat = await session.execute(
+        select(AudioChat).where((AudioChat.id == chat_id) & (AudioChat.owner_id == current_user))
+    )
+    chat = chat.fetchone()
+    if not chat:
+        raise HTTPException(status_code=404, detail="CHAT NOT FOUND")
+
+    if chat[0].state not in [0]:
+        raise HTTPException(status_code=401, detail="INCORRECT STATE")
+
+    chat[0].state = 2
+    await session.commit()
+    await session.refresh(chat[0])
+    return chat[0]
+
+
+@router.get("/start")
+async def do_not_upload_file(chat_id: int, Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_db)):
+    Authorize.jwt_required()
+    current_user = Authorize.get_jwt_subject()
+    chat = await session.execute(
+        select(AudioChat).where((AudioChat.id == chat_id) & (AudioChat.owner_id == current_user))
+    )
+    chat = chat.fetchone()
+    if not chat:
+        return HTTPException(status_code=404, detail="CHAT NOT FOUND")
+
+    if chat[0].state not in [1, 2]:
+        raise HTTPException(status_code=401, detail="INCORRECT STATE")
+
+    chat[0].state = 3
+    await session.commit()
+    await session.refresh(chat[0])
+    return chat[0]
+
+
+@router.get("/pause")
+async def do_not_upload_file(chat_id: int, Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_db)):
+    Authorize.jwt_required()
+    current_user = Authorize.get_jwt_subject()
+    chat = await session.execute(
+        select(AudioChat).where((AudioChat.id == chat_id) & (AudioChat.owner_id == current_user))
+    )
+    chat = chat.fetchone()
+    if not chat:
+        return HTTPException(status_code=404, detail="CHAT NOT FOUND")
+
+    if chat[0].state not in [3]:
+        raise HTTPException(status_code=401, detail="INCORRECT STATE")
+
+    chat[0].state = 4
+    await session.commit()
+    await session.refresh(chat[0])
+    return chat[0]
+
+
+@router.get("/finish")
+async def do_not_upload_file(chat_id: int, Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_db)):
+    Authorize.jwt_required()
+    current_user = Authorize.get_jwt_subject()
+    chat = await session.execute(
+        select(AudioChat).where((AudioChat.id == chat_id) & (AudioChat.owner_id == current_user))
+    )
+    chat = chat.fetchone()
+    if not chat:
+        return HTTPException(status_code=404, detail="CHAT NOT FOUND")
+
+    if chat[0].state not in [3, 4]:
+        raise HTTPException(status_code=401, detail="INCORRECT STATE")
+
+    chat[0].state = 5
+    await session.commit()
+    await session.refresh(chat[0])
+    return chat[0]
+
+
+@router.post("/file/upload")
+async def upload_file(
+        chat_id: int,
+        file: UploadFile,
+        Authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_db)
+):
+    Authorize.jwt_required()
+    current_user = Authorize.get_jwt_subject()
+    chat = await session.execute(
+        select(AudioChat).where((AudioChat.id == chat_id) & (AudioChat.owner_id == current_user))
+    )
+    chat = chat.fetchone()
+    if not chat:
+        return HTTPException(status_code=404, detail="CHAT NOT FOUND")
+
+    if chat[0].state not in [0, 2]:
+        raise HTTPException(status_code=401, detail="INCORRECT CHAT STATE")
+
+    if not file.filename.endswith(('.docx', '.txt')):
+        return HTTPException(status_code=400, detail=f"INCORRECT FILE FORMAT {file.filename}")
+
+    filename = f'{uuid.uuid4()}.{file.filename.split(".")[-1]}'
+    contents = await file.read()
+    with open(f'{os.getcwd()}/gateway/audio/files/{filename}', 'wb') as f:
+        f.write(contents)
+    record = AudioChatFile(
+        chat_id=chat_id,
+        user_id=current_user,
+        file=filename
+    )
+    chat[0].state = 1
+    session.add(record)
+    await session.commit()
+    return {
+        "success": True,
+        "result": filename
+    }
+
+
+@router.get("/file/download")
+async def download_file(
+        filename: str,
+        Authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_db)
+):
+    Authorize.jwt_required()
+    current_user = Authorize.get_jwt_subject()
+    file = await session.execute(
+        select(AudioChatFile).where((AudioChatFile.file == filename) & (AudioChatFile.user_id == current_user))
+    )
+    if not file:
+        return HTTPException(status_code=404, detail="FILE NOT FOUND")
+    return FileResponse(path=f'{os.getcwd()}/gateway/audio/files/{filename}', filename=filename, media_type='multipart/form-data')
+
+
+@router.get("/{chat_id:int}")
+async def do_not_upload_file(chat_id: int, Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_db)):
+    Authorize.jwt_required()
+    current_user = Authorize.get_jwt_subject()
+    chat = await session.execute(
+        select(AudioChat).where((AudioChat.id == chat_id) & (AudioChat.owner_id == current_user))
+    )
+    chat = chat.fetchone()
+    if not chat:
+        return HTTPException(status_code=404, detail="CHAT NOT FOUND")
+    messages = await session.execute(
+        select(AudioMessage).where(AudioMessage.chat_id == chat_id)
+    )
+    files = await session.execute(
+        select(AudioChatFile).where(AudioChatFile.chat_id == chat_id)
+    )
+    return {
+        'chat': chat[0],
+        'messages': [message[0] for message in messages],
+        'files': [file[0] for file in files]
+    }
+
+
 @router.post("/voice-test/upload")
 async def upload_audio_test(
         file: UploadFile,
@@ -134,6 +295,10 @@ async def upload_audio_test(
 
     # if not file.filename.endswith('.wav'):
     #     return HTTPException(status_code=400, detail=f"INCORRECT FILE FORMAT {file.filename}")
+
+    if user[0].audio_file:
+        if os.path.exists(f'{os.getcwd()}/gateway/audio/audio_files/{user[0].audio_file}'):
+            os.remove(f'{os.getcwd()}/gateway/audio/audio_files/{user[0].audio_file}')
 
     filename = f'{uuid.uuid4()}.wav'
     contents = await file.read()
@@ -172,8 +337,9 @@ async def upload_audio(
     if os.path.exists(f'{os.getcwd()}/gateway/audio/audio_files/{filename}'):
         os.remove(f'{os.getcwd()}/gateway/audio/audio_files/{filename}')
     if result:
-        # TODO: broadcast message to ws
-        # TODO: ask ChatGPT and broadcast response
+        await manager.broadcast({'message': result}, chat_id, sender=0)
+        await asyncio.sleep(3)
+        await manager.broadcast({'message': CHATGPT_MOCK}, chat_id, sender=0)
         return {
             "author": "professor",
             "result": result
