@@ -94,7 +94,7 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
-@router.websocket('/ws/{room_id}')
+@router.websocket('/ws')
 async def websocket(room_id: int, websocket: WebSocket, token: str = Query(...)):
     room_id, current_user = await check_token(token)
     if not room_id or not current_user:
