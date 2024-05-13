@@ -34,8 +34,8 @@ async def check_token(token: str):
         data = jwt.decode(str(token), SECRET_AUTH, algorithms=["HS256"])
     except jwt.ExpiredSignatureError:
         return None
-    if 'chat_id' in data and 'customer_id' in data:
-        return data['chat_id'], data['customer_id']
+    if 'chat_id' in data and 'user_id' in data:
+        return data['chat_id'], data['user_id']
     else:
         return None
 
@@ -95,7 +95,7 @@ manager = ConnectionManager()
 
 
 @router.websocket('/ws/{room_id}')
-async def websocket(websocket: WebSocket, token: str = Query(...)):
+async def websocket(room_id: int, websocket: WebSocket, token: str = Query(...)):
     room_id, current_user = await check_token(token)
     if not room_id or not current_user:
         raise HTTPException(status_code=403, detail='incorrect_token')
@@ -114,6 +114,18 @@ async def create_audio_chat(Authorize: AuthJWT = Depends(), session: AsyncSessio
     current_user = Authorize.get_jwt_subject()
     new_chat = AudioChat(owner_id=current_user)
     session.add(new_chat)
+
+    user = await session.execute(
+        select(Customer).where((Customer.id == current_user))
+    )
+    user = user.fetchone()
+
+    if not user:
+        return HTTPException(status_code=404, detail="USER NOT FOUND")
+
+    if not user[0].audio_file or not os.path.exists(f'{os.getcwd()}/gateway/audio/audio_files/{user[0].audio_file}'):
+        raise HTTPException(status_code=400, detail="TEST AUDIO NOT LOADED YET")
+
     await session.commit()
     await session.refresh(new_chat)
     return new_chat
@@ -256,7 +268,7 @@ async def download_file(
 
 
 @router.get("/{chat_id:int}")
-async def do_not_upload_file(chat_id: int, Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_db)):
+async def get_chat(chat_id: int, Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_db)):
     Authorize.jwt_required()
     current_user = Authorize.get_jwt_subject()
     chat = await session.execute(
@@ -274,7 +286,8 @@ async def do_not_upload_file(chat_id: int, Authorize: AuthJWT = Depends(), sessi
     return {
         'chat': chat[0],
         'messages': [message[0] for message in messages],
-        'files': [file[0] for file in files]
+        'files': [file[0] for file in files],
+        'token': jwt.encode({"chat_id": chat_id, "user_id": current_user}, SECRET_AUTH, algorithm="HS256").decode('utf-8')
     }
 
 
@@ -292,9 +305,6 @@ async def upload_audio_test(
     user = user.fetchone()
     if not user:
         return HTTPException(status_code=404, detail="USER NOT FOUND")
-
-    # if not file.filename.endswith('.wav'):
-    #     return HTTPException(status_code=400, detail=f"INCORRECT FILE FORMAT {file.filename}")
 
     if user[0].audio_file:
         if os.path.exists(f'{os.getcwd()}/gateway/audio/audio_files/{user[0].audio_file}'):
@@ -326,8 +336,9 @@ async def upload_audio(
     if not user:
         return HTTPException(status_code=404, detail="USER NOT FOUND")
 
-    # if not file.filename.endswith('.wav'):
-    #     return HTTPException(status_code=400, detail=f"INCORRECT FILE FORMAT {file.filename}")
+    if not user[0].audio_file or not os.path.exists(f'{os.getcwd()}/gateway/audio/audio_files/{user[0].audio_file}'):
+        raise HTTPException(status_code=400, detail="TEST AUDIO NOT LOADED YET")
+
     filename = f'{uuid.uuid4()}.wav'
     contents = await file.read()
     with open(f'{os.getcwd()}/gateway/audio/audio_files/{filename}', 'wb') as f:
@@ -339,7 +350,7 @@ async def upload_audio(
     if result:
         await manager.broadcast({'message': result}, chat_id, sender=0)
         await asyncio.sleep(3)
-        await manager.broadcast({'message': CHATGPT_MOCK}, chat_id, sender=0)
+        await manager.broadcast({'message': CHATGPT_MOCK}, chat_id, sender=1)
         return {
             "author": "professor",
             "result": result
