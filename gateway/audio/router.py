@@ -99,7 +99,7 @@ manager = ConnectionManager()
 async def websocket(websocket: WebSocket, token: str = Query(...)):
     room_id, current_user = await check_token(token)
     if not room_id or not current_user:
-        raise HTTPException(status_code=403, detail='INCORRECT TOKEN')
+        raise HTTPException(status_code=418, detail='INCORRECT TOKEN')
     await manager.connect(websocket, room_id)
     try:
         while True:
@@ -124,7 +124,7 @@ async def create_audio_chat(Authorize: AuthJWT = Depends(), session: AsyncSessio
         return HTTPException(status_code=404, detail="USER NOT FOUND")
 
     if not user[0].audio_file or not os.path.exists(f'{os.getcwd()}/gateway/audio/audio_files/{user[0].audio_file}'):
-        raise HTTPException(status_code=400, detail="TEST AUDIO NOT LOADED YET")
+        raise HTTPException(status_code=418, detail="TEST AUDIO NOT LOADED YET")
 
     await session.commit()
     await session.refresh(new_chat)
@@ -143,7 +143,7 @@ async def do_not_upload_file(chat_id: int, Authorize: AuthJWT = Depends(), sessi
         raise HTTPException(status_code=404, detail="CHAT NOT FOUND")
 
     if chat[0].state not in [0]:
-        raise HTTPException(status_code=401, detail="INCORRECT STATE")
+        raise HTTPException(status_code=418, detail="INCORRECT STATE")
 
     chat[0].state = 2
     await session.commit()
@@ -163,7 +163,7 @@ async def do_not_upload_file(chat_id: int, Authorize: AuthJWT = Depends(), sessi
         return HTTPException(status_code=404, detail="CHAT NOT FOUND")
 
     if chat[0].state not in [1, 2]:
-        raise HTTPException(status_code=401, detail="INCORRECT STATE")
+        raise HTTPException(status_code=418, detail="INCORRECT STATE")
 
     chat[0].state = 3
     await session.commit()
@@ -183,7 +183,7 @@ async def do_not_upload_file(chat_id: int, Authorize: AuthJWT = Depends(), sessi
         return HTTPException(status_code=404, detail="CHAT NOT FOUND")
 
     if chat[0].state not in [3]:
-        raise HTTPException(status_code=401, detail="INCORRECT STATE")
+        raise HTTPException(status_code=418, detail="INCORRECT STATE")
 
     chat[0].state = 4
     await session.commit()
@@ -203,7 +203,7 @@ async def do_not_upload_file(chat_id: int, Authorize: AuthJWT = Depends(), sessi
         return HTTPException(status_code=404, detail="CHAT NOT FOUND")
 
     if chat[0].state not in [3, 4]:
-        raise HTTPException(status_code=401, detail="INCORRECT STATE")
+        raise HTTPException(status_code=418, detail="INCORRECT STATE")
 
     chat[0].state = 5
     await session.commit()
@@ -228,10 +228,10 @@ async def upload_file(
         return HTTPException(status_code=404, detail="CHAT NOT FOUND")
 
     if chat[0].state not in [0, 2]:
-        raise HTTPException(status_code=401, detail="INCORRECT CHAT STATE")
+        raise HTTPException(status_code=418, detail="INCORRECT CHAT STATE")
 
     if not file.filename.endswith(('.docx', '.txt')):
-        return HTTPException(status_code=400, detail=f"INCORRECT FILE FORMAT {file.filename}")
+        return HTTPException(status_code=418, detail=f"INCORRECT FILE FORMAT {file.filename}")
 
     filename = f'{uuid.uuid4()}.{file.filename.split(".")[-1]}'
     contents = await file.read()
@@ -350,7 +350,7 @@ async def upload_audio(
         return HTTPException(status_code=404, detail="USER NOT FOUND")
 
     if not user[0].audio_file or not os.path.exists(f'{os.getcwd()}/gateway/audio/audio_files/{user[0].audio_file}'):
-        raise HTTPException(status_code=400, detail="TEST AUDIO NOT LOADED YET")
+        raise HTTPException(status_code=418, detail="TEST AUDIO NOT LOADED YET")
 
     filename = f'{uuid.uuid4()}.wav'
     contents = await file.read()
