@@ -73,7 +73,7 @@ async def telegram(request: Request):
     )
 
 
-@app.get("/auth/telegram-callback")
+@app.get("/auth/telegram-callback", response_class=HTMLResponse)
 async def telegram_auth(
         request: Request,
         user_id: Annotated[int, Query(alias='id')],
