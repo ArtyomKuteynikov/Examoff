@@ -108,7 +108,7 @@ async def telegram_auth(
         </body>
         <script>
         window.onload = () => {{
-            window.opener.postMessage({access_token}, '*')
+            window.opener.postMessage('{access_token}', '*')
             window.close()
             }}
         </script>
@@ -350,7 +350,7 @@ async def google_callback(request: Request, session: AsyncSession = Depends(get_
     </body>
     <script>
     window.onload = () => {{
-        window.opener.postMessage({access_token}, '*')
+        window.opener.postMessage('{access_token}', '*')
         window.close()
         }}
     </script>
