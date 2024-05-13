@@ -73,7 +73,7 @@ async def telegram(request: Request):
     )
 
 
-@app.get("/auth/telegram-callback")
+@app.get("/auth/telegram-callback", response_class=HTMLResponse)
 async def telegram_auth(
         request: Request,
         user_id: Annotated[int, Query(alias='id')],
@@ -83,7 +83,6 @@ async def telegram_auth(
         Authorize: AuthJWT = Depends()
 ):
     params = request.query_params.items()
-    print(params)
     data_check_string = '\n'.join(sorted(f'{x}={y}' for x, y in params if x not in ('hash', 'next')))
     computed_hash = hmac.new(BOT_TOKEN_HASH.digest(), data_check_string.encode(), 'sha256').hexdigest()
     is_correct = hmac.compare_digest(computed_hash, query_hash)
@@ -96,10 +95,26 @@ async def telegram_auth(
     user = result.first()
     if user:
         access_token = Authorize.create_access_token(subject=user[0].id)
-        return {
-            'access_token': access_token,
-            'customer_id': user[0].id
-        }
+        html_page = f"""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+        </head>
+        <body>
+
+        </body>
+        <script>
+        window.onload = () => {{
+            window.opener.postMessage('{access_token}', '*')
+            window.close()
+            }}
+        </script>
+        </html>
+        """
+        return html_page
 
     # Регистрация
     user = Customer(
@@ -113,10 +128,26 @@ async def telegram_auth(
     await session.commit()
 
     access_token = Authorize.create_access_token(subject=user.id)
-    return {
-        'access_token': access_token,
-        'customer_id': user.id
-    }
+    html_page = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    </head>
+    <body>
+
+    </body>
+    <script>
+    window.onload = () => {{
+        window.opener.postMessage('{access_token}', '*')
+        window.close()
+        }}
+    </script>
+    </html>
+    """
+    return html_page
 
 
 @app.get("/yandex/auth")
@@ -262,7 +293,7 @@ async def google_login():
         return await google_sso.get_login_redirect()
 
 
-@app.get("/google/callback")
+@app.get("/google/callback", response_class=HTMLResponse)
 async def google_callback(request: Request, session: AsyncSession = Depends(get_db), Authorize: AuthJWT = Depends()):
     with google_sso:
         google_user = await google_sso.verify_and_process(request)
@@ -273,10 +304,26 @@ async def google_callback(request: Request, session: AsyncSession = Depends(get_
     user = result.first()
     if user:
         access_token = Authorize.create_access_token(subject=user[0].id)
-        return {
-            'access_token': access_token,
-            'customer_id': user[0].id
-        }
+        html_page = f"""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+        </head>
+        <body>
+        
+        </body>
+        <script>
+        window.onload = () => {{
+            window.opener.postMessage('{access_token}', '*')
+            window.close()
+            }}
+        </script>
+        </html>
+        """
+        return html_page
 
     # Регистрация
     user = Customer(
@@ -290,10 +337,26 @@ async def google_callback(request: Request, session: AsyncSession = Depends(get_
     await session.commit()
 
     access_token = Authorize.create_access_token(subject=user.id)
-    return {
-        'access_token': access_token,
-        'customer_id': user.id
-    }
+    html_page = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    </head>
+    <body>
+
+    </body>
+    <script>
+    window.onload = () => {{
+        window.opener.postMessage('{access_token}', '*')
+        window.close()
+        }}
+    </script>
+    </html>
+    """
+    return html_page
 
 
 @app.post("/v1/signin", tags=['Account'])
