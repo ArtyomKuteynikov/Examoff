@@ -102,8 +102,7 @@ async def websocket(room_id: int, websocket: WebSocket, token: str = Query(...))
     await manager.connect(websocket, room_id)
     try:
         while True:
-            data = await websocket.receive_json()
-            await manager.broadcast(data, room_id, sender=0)
+            _ = await websocket.receive_json()
     except WebSocketDisconnect:
         manager.disconnect(websocket, room_id)
 
