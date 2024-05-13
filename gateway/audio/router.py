@@ -98,7 +98,7 @@ manager = ConnectionManager()
 async def websocket(room_id: int, websocket: WebSocket, token: str = Query(...)):
     room_id, current_user = await check_token(token)
     if not room_id or not current_user:
-        raise HTTPException(status_code=403, detail='incorrect_token')
+        raise HTTPException(status_code=403, detail='INCORRECT TOKEN')
     await manager.connect(websocket, room_id)
     try:
         while True:
@@ -264,6 +264,19 @@ async def download_file(
     if not file:
         return HTTPException(status_code=404, detail="FILE NOT FOUND")
     return FileResponse(path=f'{os.getcwd()}/gateway/audio/files/{filename}', filename=filename, media_type='multipart/form-data')
+
+
+@router.get("/")
+async def get_chats(Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_db)):
+    Authorize.jwt_required()
+    current_user = Authorize.get_jwt_subject()
+    chats = await session.execute(
+        select(AudioChat).where((AudioChat.owner_id == current_user))
+    )
+    chats = chats.fetchall()
+    return [
+        chat[0] for chat in chats
+    ]
 
 
 @router.get("/{chat_id:int}")
