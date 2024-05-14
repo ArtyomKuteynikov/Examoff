@@ -42,6 +42,8 @@ class MessageSchema(BaseModel):
     sender_id: int
     created_at: datetime
     response_specific_state: Optional[str] = None
+    file_name: Optional[str] = None
+    file_link: Optional[str] = None
 
 
 class MessageInCreationSchema(BaseModel):
@@ -78,3 +80,5 @@ class MessageInCreationSchema(BaseModel):
     sender_id: int
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     response_specific_state: Optional[str] = None
+    file_name: Optional[str] = None
+    file_link: Optional[str] = None
