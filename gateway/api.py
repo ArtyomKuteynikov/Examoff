@@ -25,7 +25,7 @@ from fastapi import FastAPI, Request, Depends, HTTPException
 from sqlalchemy import select
 from starlette.responses import HTMLResponse, PlainTextResponse
 from starlette.staticfiles import StaticFiles
-from gateway.config.database import init_db, get_db
+from gateway.config.database import init_db, get_db, async_session_maker
 from gateway.config.main import Settings, send_email
 from gateway.chat.router import router as router_chat
 from gateway.audio.router import router as router_audio
@@ -619,6 +619,17 @@ async def get_file_id_by_chat(chat_id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="File not found on server")
 
 
+@app.get("/user_file/", response_class=FileResponse)
+async def get_user_file_by_chat_and_file_name(file_path: str, file_name):
+    """
+    Pass
+    """
+    try:
+        return FileResponse(path=file_path, filename=file_name, media_type='application/octet-stream')
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="File not found on server")
+
+
 @app.post("/files/upload")
 async def upload_file(
         chat_id: int,
@@ -633,12 +644,23 @@ async def upload_file(
     )
     user = user.fetchone()
 
-    if user and file.filename.endswith(('.docx', '.txt')):
-        os.makedirs(f"files/user_uploads/{user[0].id}", exist_ok=True)
-        file_location = f"files/user_uploads/{user[0].id}/{chat_id}"
+    if user:
+        os.makedirs(f"files/user_uploads/{user[0].id}/{chat_id}", exist_ok=True)
+        file_location = f"files/user_uploads/{user[0].id}/{chat_id}/"
         contents = await file.read()
-        with open(file_location, 'wb') as f:
+        with open(file_location + file.filename, 'wb') as f:
             f.write(contents)
+
+        async with async_session_maker() as session:
+            message_in_creation = MessageInCreationSchema(
+                chat_id=chat_id,
+                text='',
+                sender_id=user[0].id,
+                file_name=file.filename,
+                file_link=file_location + file.filename,
+            )
+            message_repo = MessageRepo(session)
+            await message_repo.create_message(message_in_creation)
 
         return {"Status": f"OK"}
     return {"Status": f"Didn't find user."}

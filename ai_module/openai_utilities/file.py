@@ -74,7 +74,9 @@ class EventHandler(AssistantEventHandler):
 
 b = create_openai_assistant()
 c = upload_vector_store(['Курсовая бизнес-план.docx'])
-d = create_open_ai_thread(b, c)
+d = create_open_ai_thread(b, c, messages=[
+    {"role": "user", "content": "В пункте 2.5. Технологии и операционный план, сколько указано процентов занятых специалистов?"}
+])
 with client.beta.threads.runs.stream(
         thread_id=d.id,
         assistant_id=b.id,
