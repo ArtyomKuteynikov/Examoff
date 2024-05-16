@@ -64,13 +64,13 @@ HOMEWORK_ASK_ACCEPT_TEXT_STRUCTURE = (
 
 ## WorkWithFile States
 WORK_WITH_FILE_WELCOME_MESSAGE = (
-    "WORK_WITH_FILE_WELCOME_MESSAGE"
+    "Привет. Загрузи файл, чтобы начать."
 )
 WORK_WITH_FILE_FILE_ANALYZED = (
     "WORK_WITH_FILE_FILE_ANALYZED"
 )
 WORK_WITH_FILE_START_ASKING = (
-    "WORK_WITH_FILE_START_ASKING"
+    "Файл загружен, задавай свой вопрос!"
 )
 
 # OpenAI context messages

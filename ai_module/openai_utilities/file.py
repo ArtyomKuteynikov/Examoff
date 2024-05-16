@@ -1,7 +1,11 @@
+import asyncio
+
 from openai import OpenAI
 import os
 from openai import AssistantEventHandler
 from dotenv import load_dotenv
+
+from gateway.chat.dependens.answers import open_free_sate_message_in_websockets, send_free_sate_message_in_websockets
 
 load_dotenv()
 # Замените 'YOUR_OPENAI_API_KEY' на ваш API-ключ
@@ -48,39 +52,46 @@ def create_open_ai_thread(assistant, vector_store, messages):
 
 
 class EventHandler(AssistantEventHandler):
-    def __init__(self, test_var):
+    def __init__(self, chat, connections):
         super().__init__()
-        self.test_var = test_var
+        self.chat = chat
+        self.connections = connections
+        self.full_message = ''
 
     def on_text_created(self, text) -> None:
-        print(f"\nassistant {self.test_var}> ", end="", flush=True)
+        loop = asyncio.get_event_loop()
+        loop.create_task(open_free_sate_message_in_websockets(self.connections, self.chat))
 
     def on_text_delta(self, delta, snapshot):
         print(delta.value, end="", flush=True)
+        self.full_message += delta.value
 
-    def on_tool_call_created(self, tool_call):
-        print(f"\nassistant on_tool_call_created> {tool_call.type}\n", flush=True)
-
-    def on_tool_call_delta(self, delta, snapshot):
-        if delta.type == 'code_interpreter':
-            if delta.code_interpreter.input:
-                print(delta.code_interpreter.input, end="", flush=True)
-            if delta.code_interpreter.outputs:
-                print(f"\n\noutput on_tool_call_delta>", flush=True)
-                for output in delta.code_interpreter.outputs:
-                    if output.type == "logs":
-                        print(f"\n{output.logs}", flush=True)
+        loop = asyncio.get_event_loop()
+        loop.create_task(send_free_sate_message_in_websockets(
+            self.connections,
+            self.chat,
+            delta.value,
+            ''
+        ))
 
 
-b = create_openai_assistant()
-c = upload_vector_store(['Курсовая бизнес-план.docx'])
-d = create_open_ai_thread(b, c, messages=[
-    {"role": "user", "content": "В пункте 2.5. Технологии и операционный план, сколько указано процентов занятых специалистов?"}
-])
-with client.beta.threads.runs.stream(
-        thread_id=d.id,
-        assistant_id=b.id,
-        instructions="Please address the user as Student. The user has a premium account.",
-        event_handler=EventHandler(test_var=123),
-) as stream:
-    stream.until_done()
+def on_tool_call_created(self, tool_call):
+    print(f"\nassistant on_tool_call_created> {tool_call.type}\n", flush=True)
+
+
+def on_tool_call_delta(self, delta, snapshot):
+    if delta.type == 'code_interpreter':
+        if delta.code_interpreter.input:
+            print(delta.code_interpreter.input, end="", flush=True)
+        if delta.code_interpreter.outputs:
+            print(f"\n\noutput on_tool_call_delta>", flush=True)
+            for output in delta.code_interpreter.outputs:
+                if output.type == "logs":
+                    loop = asyncio.get_event_loop()
+                    loop.create_task(
+                        send_free_sate_message_in_websockets(
+                            self.connections,
+                            self.chat,
+                            delta.value,
+                            'stop'
+                        ))
