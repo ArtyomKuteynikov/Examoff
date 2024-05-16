@@ -21,8 +21,8 @@ class WebsocketMessageType(StrEnum):
         Сообщение, отправленное от пользователя.
         Дублирует информацию для других websocket соединений.
     """
-    USER_MESSAGE = "user_message"
-    SYSTEM_MESSAGE = "system_message"
+    VIEWER = "viewer"
+    SENDER = "sender"
     USER_MESSAGE_FROM_OTHER_SOCKET = "user_message_from_other_socket"
 
 

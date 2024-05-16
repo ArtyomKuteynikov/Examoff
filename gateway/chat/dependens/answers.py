@@ -48,7 +48,7 @@ async def send_message_in_websockets(connections, chat: ChatSchema, message_text
     :param message_text: Текст сообщения для отправки.
     """
     websocket_message = WebsocketMessageData(
-        message_type=WebsocketMessageType.SYSTEM_MESSAGE,
+        sender=WebsocketMessageType.SENDER,
         data={
             "message_text": message_text,
         },
@@ -73,7 +73,7 @@ async def send_free_sate_message_in_websockets(connections, chat: ChatSchema, ch
     :param finish_reason: Текст сообщения для отправки.
     """
     data = {
-        "message_type": "system_message",
+        "sender": "server",
         "data": {
             "chunk_text": f"{chunk_text}",
             "finish_reason": f"{finish_reason}",
@@ -96,7 +96,7 @@ async def open_free_sate_message_in_websockets(connections, chat: ChatSchema) ->
     :param chat: Чат с пользователем.
     """
     data = {
-        "message_type": "system_message",
+        "sender": "server",
         "new_message": "open"
     }
     json_data = dumps(data, ensure_ascii=False)
@@ -139,13 +139,13 @@ async def repeat_state_message(connections, chat: ChatSchema, message_text: str)
 
 async def send_ask_accept_work_plan_buttons(connections, chat: ChatSchema):
     yes_button = {
-        "message_type": "system_message",
+        "sender": "server",
         "data": {
             "button": "Да, согласен"
         }
     }
     no_button = {
-        "message_type": "system_message",
+        "sender": "server",
         "data": {
             "button": "Нет, не согласен"
         }

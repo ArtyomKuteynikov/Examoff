@@ -17,7 +17,7 @@ class WebsocketMessageData(BaseModel):
     Class properties
     ----------------
 
-    message_type: str
+    sender: str
         Тип сообщения. Определяет, как должны быть обработаны данные.
 
     data: Dict[str, Any]
@@ -25,15 +25,15 @@ class WebsocketMessageData(BaseModel):
 
     Example websocket message:
         {
-            "message_type": "user_message",
+            "sender": "viewer",
             "data": {
                 "message_text": "Hello, my name is User."
             }
         }
     """
-    message_type: Literal[
-        WebsocketMessageType.USER_MESSAGE,
-        WebsocketMessageType.SYSTEM_MESSAGE,
+    sender: Literal[
+        WebsocketMessageType.VIEWER,
+        WebsocketMessageType.SENDER,
         WebsocketMessageType.USER_MESSAGE_FROM_OTHER_SOCKET,
     ]
     data: Dict[str, Any]
@@ -46,10 +46,10 @@ def websocket_message_data_to_websocket_format(message: WebsocketMessageData) ->
     :param message: Сообщение по websocket.
     :return: Str по примеру:
         {
-            "message_type": "user_message",
+            "sender": "viewer",
             "data": {
                 "message_text": "Hello, my name is User."
             }
         }
     """
-    return dumps({"message_type": message.message_type.value, "data": message.data, }, ensure_ascii=False)
+    return dumps({"sender": message.sender.value, "data": message.data, }, ensure_ascii=False)
