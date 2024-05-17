@@ -5,8 +5,12 @@ import os
 from openai import AssistantEventHandler
 from dotenv import load_dotenv
 
-from gateway.chat.dependens.answers import open_free_sate_message_in_websockets, send_free_sate_message_in_websockets
+from gateway.chat.dependens.answers import open_free_sate_message_in_websockets, send_free_sate_message_in_websockets, \
+    create_system_message_in_db
 
+import nest_asyncio
+
+nest_asyncio.apply()
 load_dotenv()
 # Замените 'YOUR_OPENAI_API_KEY' на ваш API-ключ
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", "OPENAI_API_KEY is empty"))
@@ -60,19 +64,34 @@ class EventHandler(AssistantEventHandler):
 
     def on_text_created(self, text) -> None:
         loop = asyncio.get_event_loop()
-        loop.create_task(open_free_sate_message_in_websockets(self.connections, self.chat))
+        task = loop.create_task(open_free_sate_message_in_websockets(self.connections, self.chat))
+        loop.run_until_complete(task)
 
     def on_text_delta(self, delta, snapshot):
         print(delta.value, end="", flush=True)
         self.full_message += delta.value
 
         loop = asyncio.get_event_loop()
-        loop.create_task(send_free_sate_message_in_websockets(
+        task = loop.create_task(send_free_sate_message_in_websockets(
             self.connections,
             self.chat,
             delta.value,
             ''
         ))
+        loop.run_until_complete(task)
+
+    def on_text_done(self, text):
+        loop = asyncio.get_event_loop()
+        task = loop.create_task(
+            send_free_sate_message_in_websockets(
+                self.connections,
+                self.chat,
+                '',
+                'stop'
+            ))
+        loop.run_until_complete(task)
+        task = loop.create_task(create_system_message_in_db(self.chat, self.full_message))
+        loop.run_until_complete(task)
 
 
 def on_tool_call_created(self, tool_call):

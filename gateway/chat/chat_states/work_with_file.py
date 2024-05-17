@@ -66,14 +66,13 @@ class WorkWithFileChatStateHandler:
         :param message: Сообщение, отправленное пользователем.
         :param connections: Список подключений по websocket.
         """
-        file_link = message.text
-        self.file = upload_vector_store([file_link])
-        await send_message_and_change_state(
-            connections=connections,
-            chat=chat,
-            message_text=strings.WORK_WITH_FILE_START_ASKING,
-            state=WorkWithFileChatStateEnum.START_ASKING,
-        )
+        if message.text == 'Файл загружен.':
+            await send_message_and_change_state(
+                connections=connections,
+                chat=chat,
+                message_text=strings.WORK_WITH_FILE_START_ASKING,
+                state=WorkWithFileChatStateEnum.START_ASKING,
+            )
 
     async def _work_with_file_start_asking(self, chat: ChatSchema, message, connections) -> None:
         """
@@ -86,14 +85,11 @@ class WorkWithFileChatStateHandler:
         async with async_session_maker() as session:
             message_repo = MessageRepo(session)
             messages = await message_repo.get_messages_by_attributes({'chat_id': chat.id,
-                                                                      'response_specific_state': 'file_analyzed'})
+                                                                      'response_specific_state': 'UPLOADED_FILE'})
 
             filtered_messages = [message for message in messages if message.response_specific_state is not None]
-            messages = {}
-            for message in filtered_messages:
-                messages[message.response_specific_state] = message
+            file_path = filtered_messages[0].file_link
 
-            file_path = messages['file_analyzed'].text
         self.file = upload_vector_store([file_path])
 
         messages = []
@@ -102,24 +98,22 @@ class WorkWithFileChatStateHandler:
             bd_messages = await message_repo.get_messages_by_attributes({'chat_id': chat.id})
 
             for mes in bd_messages[-9:]:
-                if mes.sender_id == 1:
-                    messages.append(
-                        {"role": "assistant", "content": mes.text}
-                    )
-                else:
-                    messages.append(
-                        {"role": "user", "content": mes.text}
-                    )
+                if mes.text != '':
+                    if mes.sender_id == 1:
+                        messages.append(
+                            {"role": "assistant", "content": mes.text}
+                        )
+                    else:
+                        messages.append(
+                            {"role": "user", "content": mes.text}
+                        )
         thread = create_open_ai_thread(self.assistant, self.file, messages=messages)
-        print('tut1')
         with client.beta.threads.runs.stream(
                 thread_id=thread.id,
                 assistant_id=self.assistant.id,
                 instructions="Please address the user as Student. The user has a premium account.",
                 event_handler=EventHandler(chat=chat, connections=connections),
         ) as stream:
-            print('tut2')
             stream.until_done()
-            print('tut3')
 
         await change_chat_state(chat, WorkWithFileChatStateEnum.START_ASKING)

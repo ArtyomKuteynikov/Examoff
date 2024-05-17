@@ -658,9 +658,10 @@ async def upload_file(
                 sender_id=user[0].id,
                 file_name=file.filename,
                 file_link=file_location + file.filename,
+                response_specific_state='UPLOADED_FILE',
             )
             message_repo = MessageRepo(session)
             await message_repo.create_message(message_in_creation)
 
-        return {"Status": f"OK"}
+        return {"file_link": f"{file_location + file.filename}"}
     return {"Status": f"Didn't find user."}
