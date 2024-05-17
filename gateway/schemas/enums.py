@@ -22,7 +22,7 @@ class WebsocketMessageType(StrEnum):
         Дублирует информацию для других websocket соединений.
     """
     VIEWER = "viewer"
-    SENDER = "sender"
+    SERVER = "server"
     USER_MESSAGE_FROM_OTHER_SOCKET = "user_message_from_other_socket"
 
 

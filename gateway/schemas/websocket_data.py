@@ -33,7 +33,7 @@ class WebsocketMessageData(BaseModel):
     """
     sender: Literal[
         WebsocketMessageType.VIEWER,
-        WebsocketMessageType.SENDER,
+        WebsocketMessageType.SERVER,
         WebsocketMessageType.USER_MESSAGE_FROM_OTHER_SOCKET,
     ]
     data: Dict[str, Any]

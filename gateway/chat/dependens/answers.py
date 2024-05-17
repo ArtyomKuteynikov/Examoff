@@ -48,7 +48,7 @@ async def send_message_in_websockets(connections, chat: ChatSchema, message_text
     :param message_text: Текст сообщения для отправки.
     """
     websocket_message = WebsocketMessageData(
-        sender=WebsocketMessageType.SENDER,
+        sender=WebsocketMessageType.SERVER,
         data={
             "message_text": message_text,
         },
