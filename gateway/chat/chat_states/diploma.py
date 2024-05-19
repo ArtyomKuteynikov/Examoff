@@ -4,9 +4,10 @@ import uuid
 
 from ai_module.openai_utilities.document_structure import generate_test_structure, generate_document
 from ai_module.openai_utilities.message_handler import handle_question_ask_work_size
-from ai_module.openai_utilities.plan import generate_plan_via_chat, get_work_plan_from_db
+from ai_module.openai_utilities.plan import generate_plan_via_chat, get_work_plan_from_db, \
+    generate_diploma_plan_via_chat
 from gateway.chat.dependens.answers import send_message_and_change_state, repeat_state_message, \
-    create_system_message_in_db, send_ask_accept_work_plan_buttons
+    create_system_message_in_db
 from gateway.config.database import async_session_maker
 from gateway.db.files.repo import FileRepo
 from gateway.resources.chat_state_strings import diploma_state_strings
@@ -160,7 +161,7 @@ class DiplomaChatStateHandler:
             message_text='Идет генерация плана...',
         )
 
-        plan = await generate_plan_via_chat(chat)
+        plan = await generate_diploma_plan_via_chat(chat)
         if not plan:
             await send_message_and_change_state(
                 connections=connections,
@@ -186,8 +187,8 @@ class DiplomaChatStateHandler:
                 diploma_plan=plan_structure
             ),
             state=DiplomaChatStateEnum.ASK_ACCEPT_PLAN,
+            response_variants=["Да, согласен", "Нет, не согласен"],
         )
-        await send_ask_accept_work_plan_buttons(connections, chat)
 
     async def _diploma_ask_accept_plan(self, chat: ChatSchema, message, connections) -> None:
         """
@@ -211,8 +212,8 @@ class DiplomaChatStateHandler:
                     diploma_plan=plan_structure
                 ),
                 state=DiplomaChatStateEnum.ASK_ACCEPT_PLAN,
+                response_variants=["Да, согласен", "Нет, не согласен"],
             )
-            await send_ask_accept_work_plan_buttons(connections, chat)
 
         elif message.text == 'Да, согласен':
             await repeat_state_message(
@@ -237,8 +238,8 @@ class DiplomaChatStateHandler:
                     text_structure=text_structure
                 ),
                 state=DiplomaChatStateEnum.ASK_ACCEPT_TEXT_STRUCTURE,
+                response_variants=["Да, согласен", "Нет, не согласен"],
             )
-            await send_ask_accept_work_plan_buttons(connections, chat)
 
         elif message.text == 'Нет, не согласен':
             message.text = 'Да, согласен'

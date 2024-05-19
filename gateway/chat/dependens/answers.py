@@ -39,7 +39,7 @@ async def change_chat_state(chat: ChatSchema, state) -> None:
         await chat_repo.update_chat(chat)
 
 
-async def send_message_in_websockets(connections, chat: ChatSchema, message_text: str) -> None:
+async def send_message_in_websockets(connections, chat: ChatSchema, message_text: str, response_variants=None) -> None:
     """
     Отправляет сообщение по websockets.
 
@@ -47,19 +47,31 @@ async def send_message_in_websockets(connections, chat: ChatSchema, message_text
     :param chat: Чат с пользователем.
     :param message_text: Текст сообщения для отправки.
     """
-    websocket_message = WebsocketMessageData(
-        sender=WebsocketMessageType.SERVER,
-        data={
-            "message_text": message_text,
-        },
-    )
-    # Отправка только по каналам, что относятся к чату.
-    try:
+    if response_variants is None:
+        websocket_message = WebsocketMessageData(
+            sender=WebsocketMessageType.SERVER,
+            data={
+                "message_text": message_text,
+            },
+        )
+        # Отправка только по каналам, что относятся к чату.
+        try:
+            for connect in connections[chat.id]:
+                data = websocket_message_data_to_websocket_format(websocket_message)
+                await connect.send_text(data)
+        except Exception as e:
+            print(e)
+    else:
+        websocket_message = dumps({
+            "sender": "server",
+            "data": {
+                "message_text": "Hello, my name is User."
+            },
+            "response_variants":  response_variants
+        }, ensure_ascii=False)
+        print(websocket_message)
         for connect in connections[chat.id]:
-            data = websocket_message_data_to_websocket_format(websocket_message)
-            await connect.send_text(data)
-    except Exception as e:
-        print(e)
+            await connect.send_text(websocket_message)
 
 
 async def send_free_sate_message_in_websockets(connections, chat: ChatSchema, chunk_text: str, finish_reason: str) \
@@ -108,7 +120,8 @@ async def open_free_sate_message_in_websockets(connections, chat: ChatSchema) ->
         print(e)
 
 
-async def send_message_and_change_state(connections, chat: ChatSchema, message_text: str, state) -> None:
+async def send_message_and_change_state(connections, chat: ChatSchema, message_text: str, state,
+                                        response_variants=None) -> None:
     """
     Отправляет сообщение по websockets, сохраняет в бд и меняет состояние чата.
 
@@ -119,7 +132,7 @@ async def send_message_and_change_state(connections, chat: ChatSchema, message_t
     """
     await create_system_message_in_db(chat, message_text)
     await change_chat_state(chat, state)
-    await send_message_in_websockets(connections, chat, message_text)
+    await send_message_in_websockets(connections, chat, message_text, response_variants)
 
 
 async def repeat_state_message(connections, chat: ChatSchema, message_text: str) -> None:
