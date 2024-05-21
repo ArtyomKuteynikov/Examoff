@@ -7,6 +7,7 @@ from collections import defaultdict
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from gateway.audio.audiogpt import generate_answer
 from gateway.config.main import SECRET_AUTH
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, Depends, UploadFile
 from fastapi import HTTPException
@@ -24,7 +25,6 @@ router = APIRouter(
     prefix="/audio",
     tags=["Audio"]
 )
-
 
 CHATGPT_MOCK = '''Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'''
 
@@ -264,7 +264,8 @@ async def download_file(
     )
     if not file:
         return HTTPException(status_code=404, detail="FILE NOT FOUND")
-    return FileResponse(path=f'{os.getcwd()}/gateway/audio/files/{filename}', filename=filename, media_type='multipart/form-data')
+    return FileResponse(path=f'{os.getcwd()}/gateway/audio/files/{filename}', filename=filename,
+                        media_type='multipart/form-data')
 
 
 @router.get("/")
@@ -300,7 +301,8 @@ async def get_chat(chat_id: int, Authorize: AuthJWT = Depends(), session: AsyncS
         'chat': chat[0],
         'messages': [message[0] for message in messages],
         'files': [file[0] for file in files],
-        'token': jwt.encode({"chat_id": chat_id, "user_id": current_user}, SECRET_AUTH, algorithm="HS256").decode('utf-8')
+        'token': jwt.encode({"chat_id": chat_id, "user_id": current_user}, SECRET_AUTH, algorithm="HS256").decode(
+            'utf-8')
     }
 
 
@@ -356,14 +358,13 @@ async def upload_audio(
     contents = await file.read()
     with open(f'{os.getcwd()}/gateway/audio/audio_files/{filename}', 'wb') as f:
         f.write(contents)
-    result = processing(f'{os.getcwd()}/gateway/audio/audio_files/{user[0].audio_file}',
-                        f'{os.getcwd()}/gateway/audio/audio_files/{filename}')
-    if os.path.exists(f'{os.getcwd()}/gateway/audio/audio_files/{filename}'):
-        os.remove(f'{os.getcwd()}/gateway/audio/audio_files/{filename}')
+    result = asyncio.to_thread(processing, f'{os.getcwd()}/gateway/audio/audio_files/{user[0].audio_file}',
+                               f'{os.getcwd()}/gateway/audio/audio_files/{filename}')
+    # if os.path.exists(f'{os.getcwd()}/gateway/audio/audio_files/{filename}'):
+    #     os.remove(f'{os.getcwd()}/gateway/audio/audio_files/{filename}')
     if result:
         await manager.broadcast({'message': result}, chat_id, sender=0)
-        await asyncio.sleep(3)
-        await manager.broadcast({'message': CHATGPT_MOCK}, chat_id, sender=1)
+        await manager.broadcast({'message': generate_answer(chat_id, session)}, chat_id, sender=1)
         return {
             "author": "professor",
             "result": result
