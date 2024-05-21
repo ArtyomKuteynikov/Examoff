@@ -42,6 +42,8 @@ class Message(models.Model):
     text = models.TextField(verbose_name="Текст сообщения")
     created_at = models.DateTimeField(auto_now_add=True)
     response_specific_state = models.CharField(max_length=100, null=True, blank=True)
+    file_name = models.TextField(verbose_name="Название файла", null=True, blank=True)
+    file_link = models.TextField(verbose_name="Ссылка на файл", null=True, blank=True)
 
     class Meta:
         ordering = ('created_at',)
@@ -84,7 +86,7 @@ class AudioMessage(models.Model):
         (1, 'ChatGPT')
     ]
     chat = models.ForeignKey(AudioChat, on_delete=models.CASCADE, verbose_name="Чат")
-    sender = models.IntegerField(choices=SENDERS,  verbose_name="Отправитель")
+    sender = models.IntegerField(choices=SENDERS, verbose_name="Отправитель")
     text = models.TextField(verbose_name="Текст сообщения")
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -99,4 +101,3 @@ class AudioChatFile(models.Model):
 
     class Meta:
         db_table = 'audio_chat_files'  # Указание имени таблицы
-

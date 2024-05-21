@@ -17,3 +17,5 @@ class MessageModel(Base):
     created_at: datetime = Column(DateTime(timezone=True), nullable=False)
     sender_id: int = Column(ForeignKey("auth_user.id", ondelete="CASCADE"), primary_key=True)
     response_specific_state: str = Column(String(100), nullable=True)
+    file_name: str = Column(String(200), nullable=True)
+    file_link: str = Column(String(200), nullable=True)

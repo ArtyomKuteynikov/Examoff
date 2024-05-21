@@ -86,7 +86,7 @@ class ConnectionManager:
             chat: ChatSchema,
             user_id: int
     ):
-        if websocket_message.message_type == WebsocketMessageType.USER_MESSAGE:
+        if websocket_message.sender == WebsocketMessageType.VIEWER:
             message_in_creation = MessageInCreationSchema(
                 chat_id=chat.id,
                 text=websocket_message.data["message_text"],
@@ -115,7 +115,7 @@ class ConnectionManager:
         for connect in self.connections[chat_id]:
             if connect == websocket:
                 continue
-            message_to_send.message_type = WebsocketMessageType.USER_MESSAGE_FROM_OTHER_SOCKET
+            message_to_send.sender = WebsocketMessageType.USER_MESSAGE_FROM_OTHER_SOCKET
             data = websocket_message_data_to_websocket_format(message_to_send)
             await connect.send_text(data)
 
@@ -137,7 +137,7 @@ async def websocket_connection(websocket: WebSocket, token: str = Query(...), se
         while True:
             json_data = await websocket.receive_json()
             websocket_message_data = WebsocketMessageData(
-                message_type=json_data['message_type'],
+                sender=json_data['sender'],
                 data=json_data['data'],
             )
             await manager.broadcast(websocket, websocket_message_data, chat, connection_data.user_id)
@@ -282,7 +282,7 @@ responses_messages_in_websocket = {
         "content": {
             "application/json": {
                 "example": {
-                    "message_type": "user_message",
+                    "sender": "viewer",
                     "data": {
                         "message_text": "Hello, my name is User."
                     }
@@ -297,7 +297,7 @@ responses_messages_in_websocket = {
         "content": {
             "application/json": {
                 "example": {
-                    "message_type": "user_message_from_other_socket",
+                    "sender": "user_message_from_other_socket",
                     "data": {
                         "message_text": "Hello, my name is User."
                     }
@@ -310,7 +310,7 @@ responses_messages_in_websocket = {
         "content": {
             "application/json": {
                 "example": {
-                    "message_type": "system_message",
+                    "sender": "server",
                     "data": {
                         "message_text": "Response from server."
                     }

@@ -338,7 +338,7 @@ class EssayChatStateHandler:
 
             await create_system_message_in_db(chat, str(file_uuid), response_specific_state='file')
             websocket_message = WebsocketMessageData(
-                message_type=WebsocketMessageType.SYSTEM_MESSAGE,
+                sender=WebsocketMessageType.SERVER,
                 data={
                     "file": f'{file_uuid}',
                 },
